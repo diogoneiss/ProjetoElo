@@ -4,12 +4,34 @@ import numpy as np
 from cache import insert_document
 
 
-dados = elo_compnat.get_data()
+partidas = elo_compnat.get_data()
 
-elo_compnat.process_data(dados)
+RunHyperparameters = elo_compnat.RunHyperparameters
+
+# consultar a funcao pra ver a ordem e oq cada um é
+params = [4444, 2003, 8, 20, 1, 0, 0, 1]
+
+# vai criar um objeto com os parametros e retornar a partir da lista
+# poderiamos fazer um mapping de dict <-> RunHyperparameters, mas da na mesma
+# e assim é mais fácil de pluggar no pygad, já que é um genoma
+parametros_execucao = RunHyperparameters.from_list(params)
+
+print(parametros_execucao.__dict__)
+
+
+elo_compnat.process_data(partidas)
+print("processou os dados\n\n\n")
+elo_compnat.process_data(partidas)
+print("processou os dados\n\n\n")
+
+elo_compnat.process_data(partidas)
+print("processou os dados\n\n\n")
+
+# usaremos isso aqui pra salvar em nuvem os resultados
 insert_document()
-# ele vai falar que nao existe, mas ao rodar funciona
-elo_compnat.run()
+
+
+elo_compnat.run(parametros_execucao)
 
 function_inputs = [4,-2,3.5,5,-11,-4.7]
 desired_output = 44
@@ -102,7 +124,8 @@ ga_instance = pygad.GA(num_generations=num_generations,
                        random_seed=random_seed
                        )
 
-
+# não usamos comp nat ainda
+"""
 ga_instance.run()
 
 
@@ -112,3 +135,4 @@ print("Fitness value of the best solution = {solution_fitness}".format(solution_
 
 prediction = np.sum(np.array(function_inputs)*solution)
 print("Predicted output based on the best solution : {prediction}".format(prediction=prediction))
+"""

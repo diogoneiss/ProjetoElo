@@ -1,5 +1,5 @@
 import os
-from pymongo import MongoClient
+from pymongo import MongoClient, errors
 import pandas as pd
 from dotenv import load_dotenv
 import pathlib
@@ -24,9 +24,12 @@ try:
     MONGODB_URI = os.getenv('MONGODB_URI')
     DATABASE_NAME = os.getenv('DATABASE_NAME')
     COLLECTION_NAME = os.getenv('COLLECTION_NAME')
-
+    try:
     # create a client connection to your MongoDB instance
-    client = MongoClient(MONGODB_URI)
+        client = MongoClient(MONGODB_URI)
+    except:
+        print("Connection error")
+        raise FileNotFoundError
 
     # connect to your database
     db = client[DATABASE_NAME]
@@ -52,7 +55,10 @@ def insert_document(df=pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})):
 
         # todo: usar os parametros pra criar um hash, que sera o uuid
         data['_id'] = str(uuid.uuid4())
-        collection.insert_one(data)
+        try:
+            collection.insert_one(data)
+        except:
+            print("No connection")
     else:
         print("Cannot insert document because .env file does not exist.")
 

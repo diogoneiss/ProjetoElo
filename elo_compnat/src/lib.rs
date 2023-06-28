@@ -2,7 +2,7 @@ use pyo3::prelude::*;
 
 
 mod elo;
-mod experimentation;
+pub mod experimentation;
 mod util;
 
 use elo::train::construct_elo_table_for_time_series;
@@ -13,8 +13,11 @@ use experimentation::run_config;
 use util::game::Game;
 use std;
 
+use crate::experimentation::run_config::RunHyperparameters;
+
 #[pyfunction]
-pub fn run() -> PyResult<()>{
+pub fn run(parameters: RunHyperparameters) -> PyResult<()>{
+    println!("\n\nRunning experiments with parameters: {:?}", &parameters);
     //print current directory
     let curr_directory: String = match std::env::current_dir() {
         Ok(path) => path.display().to_string(),
@@ -56,7 +59,9 @@ pub fn run() -> PyResult<()>{
 /// Use this to get the parsed Vec<game>
 #[pyfunction]
 pub fn get_data(py: Python) -> PyResult<PyObject> {
-    println!("Calling get_data");
+
+    // sim, essa funcao é copiada da run. Ideal seria deixarmos toda a logica de dataset aqui e so passar ele parseado bonitinho pro run
+    println!("Getting data..");
     let curr_directory: String = match std::env::current_dir() {
         Ok(path) => path.display().to_string(),
         Err(e) => panic!("Error getting current directory: {}", e),
@@ -67,6 +72,8 @@ pub fn get_data(py: Python) -> PyResult<PyObject> {
     let mut path = String::from("data/brasileirao.csv");
 
     // "ProjetoElo" is the last directory in the current_dir path prefix it to path
+    // TODO: melhorar esse crime. Se chamamos dentro de elo_compnat, não precisa do prefixo
+    // mas se é chamado de dentro de test_elo, precisa do prefixo, pq ele usa a pasta data errada
     if curr_directory.ends_with("ProjetoElo") {
         println!("Current directory ends with ProjetoElo");
         let path2 = String::from("elo_compnat/");
@@ -85,6 +92,8 @@ pub fn get_data(py: Python) -> PyResult<PyObject> {
 }
 
 #[pyfunction]
+/// No momento essa função não faz nada, mas é um exemplo de como chamar uma função rust
+/// passando um parâmetro do python (vetor de partidas)
 pub fn process_data(py: Python, data: PyObject) -> PyResult<()> {
     let data: Vec<Game> = data.extract(py)?;
     println!("Data: {:?}", data[0]);
@@ -93,19 +102,12 @@ pub fn process_data(py: Python, data: PyObject) -> PyResult<()> {
 }
 
 
-
-/// Formats the sum of two numbers as string.
-#[pyfunction]
-fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-    Ok((a + b).to_string())
-}
-
-/// A Python module implemented in Rust.
+/// Modulo que vai pro python, necessário adicionar as funções e classes que ele vai usar
 #[pymodule]
 fn elo_compnat(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
     m.add_function(wrap_pyfunction!(run, m)?)?;
     m.add_function(wrap_pyfunction!(get_data, m)?)?;
     m.add_function(wrap_pyfunction!(process_data, m)?)?;
+    m.add_class::<RunHyperparameters>()?;
     Ok(())
 }
