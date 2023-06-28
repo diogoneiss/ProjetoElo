@@ -2,7 +2,8 @@ import elo_compnat
 import pygad
 import numpy as np
 
-elo_compnat.main()
+# ele vai falar que nao existe, mas ao rodar funciona
+elo_compnat.run()
 
 function_inputs = [4,-2,3.5,5,-11,-4.7]
 desired_output = 44
