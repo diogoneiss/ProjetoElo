@@ -1,7 +1,13 @@
 import elo_compnat
 import pygad
 import numpy as np
+from cache import insert_document
 
+
+dados = elo_compnat.get_data()
+
+elo_compnat.process_data(dados)
+insert_document()
 # ele vai falar que nao existe, mas ao rodar funciona
 elo_compnat.run()
 
