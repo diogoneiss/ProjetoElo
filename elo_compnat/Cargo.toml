@@ -1,0 +1,18 @@
+[package]
+name = "elo_compnat"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "elo_compnat"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = "0.19.0"
+clap = { version = "4.3.3", features = ["derive"] }
+csv = "1.2.2"
+thiserror = "1.0.40"
+serde = { version = "1.0", features = ["derive"] }
+skillratings = { version = "0.25", features = ["serde"] }
+rand = "0.8.5"
