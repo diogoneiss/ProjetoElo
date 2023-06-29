@@ -4,8 +4,9 @@ use pyo3::{prelude::*, types::PyDict};
 use pyo3::types::IntoPyDict as IntoPyDict;
 use serde::{Deserialize, Serialize};
 
-// this struct holds the necessary parameters for configuring the runtime of our experiments
-// It is also used as the genotype, as it holds all the experimentation parameters
+// TODO: incluir parametros novos aqui dentro
+/// this struct holds the necessary parameters for configuring the runtime of our experiments
+/// It is also used as the genotype, as it holds all the experimentation parameters
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[pyclass]
 pub struct RunConfig {

@@ -32,7 +32,7 @@ pub fn run_experiments(
     let seasons_map = season::construct_seasons(all_games);
 
     // 1st stage: do the elo training with the desired years of data. this is the backtesting
-    let mut elo_table = construct_elo_table_for_time_series(
+    let mut elo_table_at_start = construct_elo_table_for_time_series(
         all_games,
         Some(&elo_config),
         experiment_config.starting_year,
@@ -49,61 +49,73 @@ pub fn run_experiments(
     let start_t = end_year + 1;
     let end_t = *seasons_map.keys().max().unwrap();
 
-    let experimentation_range = start_t..=end_t;
-
-    let mut errors_per_season: Vec<f64> = Vec::new();
-
-    for s_year in experimentation_range.into_iter() {
-        //TODO: perform n random variations, with unique seeds
-
-        let season = seasons_map.get(&s_year).unwrap();
-        let season_games = &season.matches;
-
-        /*
-        OUTPUT / elo comparison decisions
-        2 options on how to measure the error between expected and simulated elo
-
-        1. ORACLE: Use previous loop simulated elo and apply correct data from the current loop. We will take the t-1 table and apply the respective t real match results, implying that the
-        elos were perfectly predicted, but using the elo values generated from previous simulations. Note that this will be used *only* for the error calculation, this elo table
-        will be discarded after the error is calculated, such that the correct match results are used only in desired eval season, the other ones are simulated.
-        This works as a oracle, which would be capable of predicting the results perfectly, even with bad elo values. Minimizing the error in this case would be equivalent to correctly
-        estimating the elo values.
 
 
-        2. REAL: Real elo table from t-1 period, updated with t period match results.
+    let mut error_across_runs: Vec<f64> = Vec::new();
 
-        Currently we are using option 2, but we should test both. this will require a refactor of the individual experiment function
-        */
+    for i in 0..experiment_config.random_variations {
+        // we set the seed for the random number generator at the simulation function, with i as its seed
 
-        /* INPUT decisions
+        let mut errors_per_season: Vec<f64> = Vec::new();
 
-        How to deal with "starting elo"
-        2 options on how to feed the "simulated" elo table
+        let mut elo_table = elo_table_at_start.clone();
+        for s_year in start_t..=end_t {
+            //TODO: perform n random variations, with unique seeds
 
-        1. PROPAGATED: Use previous loop simulated elo. Feed as the starting elo for the next loop. Will require some sort of exponential moving average to deal with the propagation
-        Conceptually is the best approach.
-        2. SYNTHETIC: Take the real elo table from time t-1 as input, meaning we recreate this simulated table for every experiment based on real data,
-        such that elo errors do not propagate between different seasons
+            let season = seasons_map.get(&s_year).unwrap();
+            let season_games = &season.matches;
 
-        Currently we are using option 2, but we should test both. This will require a code refactor to deal with the update and refeeding.
-        */
+            /*
+            OUTPUT / elo comparison decisions
+            2 options on how to measure the error between expected and simulated elo
 
-        // use elo table as the starting elo for the next season, using it to measure the error as well.
-        let (rmse, _, real_elo) =
-            run_season_experiment(season_games, &elo_table, run_config, experiment_config, 42);
+            1. ORACLE: Use previous loop simulated elo and apply correct data from the current loop. We will take the t-1 table and apply the respective t real match results, implying that the
+            elos were perfectly predicted, but using the elo values generated from previous simulations. Note that this will be used *only* for the error calculation, this elo table
+            will be discarded after the error is calculated, such that the correct match results are used only in desired eval season, the other ones are simulated.
+            This works as a oracle, which would be capable of predicting the results perfectly, even with bad elo values. Minimizing the error in this case would be equivalent to correctly
+            estimating the elo values.
 
-        // Update the elo tables for the next iteration
-        // As we are using option 2, we will use the real elo table for the next season, so it needs to be updated.
-        elo_table = real_elo;
 
-        errors_per_season.push(rmse);
+            2. REAL: Real elo table from t-1 period, updated with t period match results.
+
+            Currently we are using option 2, but we should test both. this will require a refactor of the individual experiment function
+            */
+
+            /* INPUT decisions
+
+            How to deal with "starting elo"
+            2 options on how to feed the "simulated" elo table
+
+            1. PROPAGATED: Use previous loop simulated elo. Feed as the starting elo for the next loop. Will require some sort of exponential moving average to deal with the propagation
+            Conceptually is the best approach.
+            2. SYNTHETIC: Take the real elo table from time t-1 as input, meaning we recreate this simulated table for every experiment based on real data,
+            such that elo errors do not propagate between different seasons
+
+            Currently we are using option 2, but we should test both. This will require a code refactor to deal with the update and refeeding.
+            */
+
+            // use elo table as the starting elo for the next season, using it to measure the error as well.
+            let (rmse, _, real_elo) =
+                run_season_experiment(season_games, &elo_table, run_config, experiment_config, i as u32);
+
+            // Update the elo tables for the next iteration
+            // As we are using option 2, we will use the real elo table for the next season, so it needs to be updated.
+            elo_table = real_elo;
+
+            errors_per_season.push(rmse);
+        }
+        // agregate the error across all seasons to get the error for this random variation
+        // im doing the mean
+        let error = errors_per_season.iter().sum::<f64>() / errors_per_season.len() as f64;
+        error_across_runs.push(error);
     }
 
     println!("Finished experiments");
 
     //print_elo_table(&elo_table, true);
-
-    errors_per_season
+    // TODO: escolher estratégia de "seleção" do valor representativo da run. Será o melhor valor? O mediano? o médio?
+    // interessante plottarmos isso pra estudar no python
+    error_across_runs
 }
 
 /// Given an starting elo and matches, simulates the season and compares it to the real season and the real match results, returning the elo difference table

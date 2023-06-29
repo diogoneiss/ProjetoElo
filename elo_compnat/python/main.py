@@ -3,7 +3,7 @@ import pygad
 import numpy as np
 from cache import insert_document
 
-
+# todo: parametrizar isso aqui para filtrar pelo nome do dataset
 partidas = elo_compnat.get_data()
 
 RunHyperparameters = elo_compnat.RunHyperparameters
@@ -13,7 +13,7 @@ params = [4444, 2003, 8, 20, 1, 0, 0, 1]
 
 # vai criar um objeto com os parametros e retornar a partir da lista
 # poderiamos fazer um mapping de dict <-> RunHyperparameters, mas da na mesma
-# e assim é mais fácil de pluggar no pygad, já que é um genoma
+# vamos precisar fazer isso também para os parâmetros do GA (RunConfig)
 parametros_execucao = RunHyperparameters.from_list(params)
 
 print(parametros_execucao.__dict__)
