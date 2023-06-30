@@ -1,4 +1,5 @@
 use crate::skillRatings::Outcomes;
+use std::collections::HashMap;
 
 /* definições da struct MyRating (renomear dps) */
 pub struct MyRating {
@@ -23,10 +24,10 @@ impl From<f64> for MyRating {
     }
 }
 
-
 /* definicoes da struct de config */
 pub struct MyConfig {
 
+    pub config_values: HashMap<&str, f64>,
     pub k0: f64,
     pub wi: f64,
     pub gamma: f64,
