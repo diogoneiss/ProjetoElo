@@ -1,28 +1,22 @@
-use std::f64::EPSILON;
 use pyo3::exceptions::PyValueError;
+use pyo3::types::IntoPyDict;
 use pyo3::{prelude::*, types::PyDict};
-use pyo3::types::IntoPyDict as IntoPyDict;
 use serde::{Deserialize, Serialize};
+use std::f64::EPSILON;
 
-// TODO: incluir parametros novos aqui dentro
 /// this struct holds the necessary parameters for configuring the runtime of our experiments
 /// It is also used as the genotype, as it holds all the experimentation parameters
 #[derive(Debug, Clone, Deserialize, Serialize)]
-#[pyclass]
+#[pyclass(dict, frozen)]
 pub struct RunConfig {
     pub k_factor: f64,
-}
-#[pymethods]
-impl RunConfig {
-    #[new]
-    fn new(k_factor: f64) -> RunConfig {
-        RunConfig {
-            k_factor
-        }
-    }
+    pub gamma: f64,
+    pub home_advantage: f64,
+    pub hfa_weight: f64,
+    pub market_value_weight: f64,
+    pub w_division: Vec<f64>,
 }
 
-// These trait implementations will probably be required to perform the genetic algorithm operations
 impl PartialEq for RunConfig {
     fn eq(&self, other: &Self) -> bool {
         (self.k_factor - other.k_factor).abs() < EPSILON
@@ -41,7 +35,106 @@ impl Eq for RunConfig {}
 
 impl Default for RunConfig {
     fn default() -> Self {
-        RunConfig { k_factor: 20.0 }
+        RunConfig {
+            k_factor: 20.0,
+            gamma: 1.0,
+            home_advantage: 0.075,
+            hfa_weight: 0.075,
+            market_value_weight: 1.0,
+            w_division: vec![20.0],
+        }
+    }
+}
+
+#[pymethods]
+impl RunConfig {
+    #[new]
+    fn new(
+        k_factor: f64,
+        gamma: f64,
+        home_advantage: f64,
+        hfa_weight: f64,
+        market_value_weight: f64,
+        w_division: Vec<f64>,
+    ) -> RunConfig {
+        RunConfig {
+            k_factor,
+            gamma,
+            home_advantage,
+            hfa_weight,
+            market_value_weight,
+            w_division,
+        }
+    }
+
+    #[getter]
+    fn __dict__(&self) -> PyResult<PyObject> {
+        Python::with_gil(|py| {
+            let dict = PyDict::new(py);
+            dict.set_item("k_factor", self.k_factor)?;
+            dict.set_item("gamma", self.gamma)?;
+            dict.set_item("home_advantage", self.home_advantage)?;
+            dict.set_item("hfa_weight", self.hfa_weight)?;
+            dict.set_item("market_value_weight", self.market_value_weight)?;
+            dict.set_item("w_division", self.w_division.clone())?;
+
+            Ok(dict.to_object(py))
+        })
+    }
+
+    #[staticmethod]
+    fn from_dict(dict: &PyDict) -> PyResult<Self> {
+        let k_factor = dict.get_item("k_factor").unwrap().extract()?;
+        let gamma = dict.get_item("gamma").unwrap().extract()?;
+        let home_advantage = dict.get_item("home_advantage").unwrap().extract()?;
+        let hfa_weight = dict.get_item("hfa_weight").unwrap().extract()?;
+        let market_value_weight = dict.get_item("market_value_weight").unwrap().extract()?;
+        let w_division = dict.get_item("w_division").unwrap().extract()?;
+
+        Ok(RunConfig::new(
+            k_factor,
+            gamma,
+            home_advantage,
+            hfa_weight,
+            market_value_weight,
+            w_division,
+        ))
+    }
+
+    fn to_dict(&self, py: Python) -> PyResult<Py<PyDict>> {
+        let dict = PyDict::new(py);
+        dict.set_item("k_factor", self.k_factor)?;
+        dict.set_item("gamma", self.gamma)?;
+        dict.set_item("home_advantage", self.home_advantage)?;
+        dict.set_item("hfa_weight", self.hfa_weight)?;
+        dict.set_item("market_value_weight", self.market_value_weight)?;
+        dict.set_item("w_division", self.w_division.clone())?;
+
+        Ok(dict.into())
+    }
+    #[staticmethod]
+    fn from_list(params: Vec<f64>) -> PyResult<Self> {
+        if params.len() < 6 {
+            return Err(PyValueError::new_err(
+                "The input list should have at least 6 elements.",
+            ));
+        }
+
+        let k_factor = params[0];
+        let gamma = params[1];
+        let home_advantage = params[2];
+        let hfa_weight = params[3];
+        let market_value_weight = params[4];
+        let w_division: Vec<f64> = params[5..].to_vec();
+
+        Ok(RunConfig::new(
+            k_factor,
+            gamma,
+            home_advantage,
+            hfa_weight,
+            market_value_weight,
+            w_division,
+        ))
     }
 }
 
@@ -60,11 +153,13 @@ pub struct RunHyperparameters {
 
 impl std::fmt::Display for RunHyperparameters {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {} {}", self.starting_elo, self.starting_year, self.backtest_years)
+        write!(
+            f,
+            "{} {} {}",
+            self.starting_elo, self.starting_year, self.backtest_years
+        )
     }
 }
-
-
 
 impl Default for RunHyperparameters {
     fn default() -> Self {
@@ -137,7 +232,9 @@ impl RunHyperparameters {
     #[staticmethod]
     fn from_list(params: Vec<u16>) -> PyResult<Self> {
         if params.len() != 8 {
-            return Err(PyValueError::new_err("The input list should have exactly 8 elements."));
+            return Err(PyValueError::new_err(
+                "The input list should have exactly 8 elements.",
+            ));
         }
 
         Ok(RunHyperparameters::new(
@@ -187,4 +284,3 @@ impl RunHyperparameters {
         Ok(dict.into())
     }
 }
-

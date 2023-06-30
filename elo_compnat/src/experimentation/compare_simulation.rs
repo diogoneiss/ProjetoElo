@@ -114,7 +114,8 @@ pub fn run_experiments(
 
     //print_elo_table(&elo_table, true);
     // TODO: escolher estratégia de "seleção" do valor representativo da run. Será o melhor valor? O mediano? o médio?
-    // interessante plottarmos isso pra estudar no python
+    // interessante plottarmos isso pra estudar no python. Como não temos um resposta da distribuição
+    // de valores no intervalo de confiança, vamos deixar assim por enquanto e investigar no python
     error_across_runs
 }
 

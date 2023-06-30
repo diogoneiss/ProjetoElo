@@ -19,6 +19,7 @@ pub fn simulate_season(
     // print the estimated league table
     // It's important to note that we use the games for the season only for estimation purposes, the real game outcome is not used in the simulation (maybe the goal difference)
 
+    // TODO: extrair a liga do game e retirar o peso w_i
     let mut simulated_games: Vec<Game> = games.to_vec();
     let mut starting_elos = original_elos.clone();
     let mut rng = StdRng::seed_from_u64(random_seed as u64);

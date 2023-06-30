@@ -13,7 +13,8 @@ use experimentation::run_config;
 use util::game::Game;
 use std;
 
-use crate::experimentation::run_config::RunHyperparameters;
+//TODO: extrair essas duas structs para arquivos separados
+use crate::experimentation::run_config::{RunConfig, RunHyperparameters};
 
 #[pyfunction]
 pub fn run(parameters: RunHyperparameters) -> PyResult<()>{
@@ -74,6 +75,7 @@ pub fn get_data(py: Python) -> PyResult<PyObject> {
     // "ProjetoElo" is the last directory in the current_dir path prefix it to path
     // TODO: melhorar esse crime. Se chamamos dentro de elo_compnat, não precisa do prefixo
     // mas se é chamado de dentro de test_elo, precisa do prefixo, pq ele usa a pasta data errada
+    // Ideal seria resolver dentro do da função de leitura de maneira invisível, deixei um TODO lá
     if curr_directory.ends_with("ProjetoElo") {
         println!("Current directory ends with ProjetoElo");
         let path2 = String::from("elo_compnat/");
@@ -92,22 +94,36 @@ pub fn get_data(py: Python) -> PyResult<PyObject> {
 }
 
 #[pyfunction]
-/// No momento essa função não faz nada, mas é um exemplo de como chamar uma função rust
-/// passando um parâmetro do python (vetor de partidas)
-pub fn process_data(py: Python, data: PyObject) -> PyResult<()> {
-    let data: Vec<Game> = data.extract(py)?;
-    println!("Data: {:?}", data[0]);
-    // Process your data here
-    Ok(())
+/// Wrapper for the run_experiments function, so that it can be called from python and the 
+/// data parsed
+/// 
+pub fn fitness_function(py: Python, partidas_py: PyObject, run_config_py:PyObject,  hyperparameters_py: PyObject) -> PyResult<Vec<f64>> {
+
+    let partidas: Vec<Game> = partidas_py.extract(py)?;
+    let run_config: RunConfig = run_config_py.extract(py)?;
+    let hyperparameters: RunHyperparameters = hyperparameters_py.extract(py)?;
+
+    println!("Running experiments with hyperparameters: {:?}", &hyperparameters);
+    println!("Genotypes for this run: {:?}", &run_config);
+    println!("1a partida: {:?}", partidas[0]);
+
+    let errors = run_experiments(&partidas, &run_config, &hyperparameters);
+
+    println!("Errors: {:?}", &errors);
+    // aqui sairia o erro
+    Ok(errors)
 }
 
 
-/// Modulo que vai pro python, necessário adicionar as funções e classes que ele vai usar
+/// This is the python module definition, everything that you want to use
+/// inside python must be declared here
 #[pymodule]
 fn elo_compnat(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(run, m)?)?;
     m.add_function(wrap_pyfunction!(get_data, m)?)?;
-    m.add_function(wrap_pyfunction!(process_data, m)?)?;
+    m.add_function(wrap_pyfunction!(fitness_function, m)?)?;
     m.add_class::<RunHyperparameters>()?;
+    m.add_class::<RunConfig>()?;
+
     Ok(())
 }

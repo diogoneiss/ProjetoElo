@@ -7,31 +7,32 @@ from cache import insert_document
 partidas = elo_compnat.get_data()
 
 RunHyperparameters = elo_compnat.RunHyperparameters
+RunConfig = elo_compnat.RunConfig
 
 # consultar a funcao pra ver a ordem e oq cada um é
-params = [4444, 2003, 8, 20, 1, 0, 0, 1]
+hyperparams_list = [4444, 2003, 8, 20, 1, 0, 0, 1]
 
 # vai criar um objeto com os parametros e retornar a partir da lista
 # poderiamos fazer um mapping de dict <-> RunHyperparameters, mas da na mesma
 # vamos precisar fazer isso também para os parâmetros do GA (RunConfig)
-parametros_execucao = RunHyperparameters.from_list(params)
+hiperparametros_obj = RunHyperparameters.from_list(hyperparams_list)
 
-print(parametros_execucao.__dict__)
+print(hiperparametros_obj.__dict__)
+
+genotype_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+run_config_obj = RunConfig.from_list(genotype_list)
 
 
-elo_compnat.process_data(partidas)
+err = elo_compnat.fitness_function(partidas, run_config_obj, hiperparametros_obj)
 print("processou os dados\n\n\n")
-elo_compnat.process_data(partidas)
-print("processou os dados\n\n\n")
-
-elo_compnat.process_data(partidas)
+elo_compnat.fitness_function(partidas, run_config_obj, hiperparametros_obj)
 print("processou os dados\n\n\n")
 
 # usaremos isso aqui pra salvar em nuvem os resultados
-insert_document()
+#insert_document()
 
 
-elo_compnat.run(parametros_execucao)
+#elo_compnat.run(hiperparametros_obj)
 
 function_inputs = [4,-2,3.5,5,-11,-4.7]
 desired_output = 44
@@ -125,7 +126,7 @@ ga_instance = pygad.GA(num_generations=num_generations,
                        )
 
 # não usamos comp nat ainda
-"""
+
 ga_instance.run()
 
 
@@ -135,4 +136,3 @@ print("Fitness value of the best solution = {solution_fitness}".format(solution_
 
 prediction = np.sum(np.array(function_inputs)*solution)
 print("Predicted output based on the best solution : {prediction}".format(prediction=prediction))
-"""
