@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 
-
 mod elo;
 pub mod experimentation;
 mod util;
@@ -10,13 +9,13 @@ use elo::util::league::LeagueTable;
 
 use experimentation::compare_simulation::run_experiments;
 use experimentation::run_config;
-use util::game::Game;
 use std;
+use util::game::Game;
 
 use crate::experimentation::run_config::RunHyperparameters;
 
 #[pyfunction]
-pub fn run(parameters: RunHyperparameters) -> PyResult<()>{
+pub fn run(parameters: RunHyperparameters) -> PyResult<()> {
     println!("\n\nRunning experiments with parameters: {:?}", &parameters);
     //print current directory
     let curr_directory: String = match std::env::current_dir() {
@@ -53,13 +52,9 @@ pub fn run(parameters: RunHyperparameters) -> PyResult<()>{
     Ok(())
 }
 
-
-
-
 /// Use this to get the parsed Vec<game>
 #[pyfunction]
 pub fn get_data(py: Python) -> PyResult<PyObject> {
-
     // sim, essa funcao é copiada da run. Ideal seria deixarmos toda a logica de dataset aqui e so passar ele parseado bonitinho pro run
     println!("Getting data..");
     let curr_directory: String = match std::env::current_dir() {
@@ -100,7 +95,6 @@ pub fn process_data(py: Python, data: PyObject) -> PyResult<()> {
     // Process your data here
     Ok(())
 }
-
 
 /// Modulo que vai pro python, necessário adicionar as funções e classes que ele vai usar
 #[pymodule]

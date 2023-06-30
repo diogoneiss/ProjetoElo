@@ -1,8 +1,8 @@
-use std::f64::EPSILON;
 use pyo3::exceptions::PyValueError;
+use pyo3::types::IntoPyDict;
 use pyo3::{prelude::*, types::PyDict};
-use pyo3::types::IntoPyDict as IntoPyDict;
 use serde::{Deserialize, Serialize};
+use std::f64::EPSILON;
 
 // TODO: incluir parametros novos aqui dentro
 /// this struct holds the necessary parameters for configuring the runtime of our experiments
@@ -16,9 +16,7 @@ pub struct RunConfig {
 impl RunConfig {
     #[new]
     fn new(k_factor: f64) -> RunConfig {
-        RunConfig {
-            k_factor
-        }
+        RunConfig { k_factor }
     }
 }
 
@@ -60,11 +58,13 @@ pub struct RunHyperparameters {
 
 impl std::fmt::Display for RunHyperparameters {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {} {}", self.starting_elo, self.starting_year, self.backtest_years)
+        write!(
+            f,
+            "{} {} {}",
+            self.starting_elo, self.starting_year, self.backtest_years
+        )
     }
 }
-
-
 
 impl Default for RunHyperparameters {
     fn default() -> Self {
@@ -137,7 +137,9 @@ impl RunHyperparameters {
     #[staticmethod]
     fn from_list(params: Vec<u16>) -> PyResult<Self> {
         if params.len() != 8 {
-            return Err(PyValueError::new_err("The input list should have exactly 8 elements."));
+            return Err(PyValueError::new_err(
+                "The input list should have exactly 8 elements.",
+            ));
         }
 
         Ok(RunHyperparameters::new(
@@ -187,4 +189,3 @@ impl RunHyperparameters {
         Ok(dict.into())
     }
 }
-

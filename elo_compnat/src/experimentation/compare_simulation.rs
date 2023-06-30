@@ -49,8 +49,6 @@ pub fn run_experiments(
     let start_t = end_year + 1;
     let end_t = *seasons_map.keys().max().unwrap();
 
-
-
     let mut error_across_runs: Vec<f64> = Vec::new();
 
     for i in 0..experiment_config.random_variations {
@@ -95,8 +93,13 @@ pub fn run_experiments(
             */
 
             // use elo table as the starting elo for the next season, using it to measure the error as well.
-            let (rmse, _, real_elo) =
-                run_season_experiment(season_games, &elo_table, run_config, experiment_config, i as u32);
+            let (rmse, _, real_elo) = run_season_experiment(
+                season_games,
+                &elo_table,
+                run_config,
+                experiment_config,
+                i as u32,
+            );
 
             // Update the elo tables for the next iteration
             // As we are using option 2, we will use the real elo table for the next season, so it needs to be updated.
