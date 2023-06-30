@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
-use skillratings::Outcomes;
 use pyo3::prelude::*;
 use pyo3::types::IntoPyDict;
+use serde::{Deserialize, Serialize};
+use skillratings::Outcomes;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[pyclass]
@@ -42,8 +42,24 @@ impl Game {
 #[pymethods]
 impl Game {
     #[new]
-    fn new(id: u64, home: String, away: String, home_score: u16, away_score: u16, result: GameResult, year: u16) -> Game {
-        Game { id, home, away, home_score, away_score, result, year }
+    fn new(
+        id: u64,
+        home: String,
+        away: String,
+        home_score: u16,
+        away_score: u16,
+        result: GameResult,
+        year: u16,
+    ) -> Game {
+        Game {
+            id,
+            home,
+            away,
+            home_score,
+            away_score,
+            result,
+            year,
+        }
     }
 }
 

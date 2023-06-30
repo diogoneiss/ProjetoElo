@@ -1,10 +1,12 @@
 use crate::util::game::Game;
 use std::error::Error;
 
-
 pub fn load_csv(path: &str) -> Result<Vec<Game>, Box<dyn Error>> {
-    // TODO: colocar gerenciamento de caminhos aqui, ou seja, se ele não encontrar
-    // ele tenta prefixar o nome dessa pasta antes do path, de modo que encontre a data
+    //TODO: essa função tem um gargalo imenso que é a leitura e parsing do csv, que é feita para todos os
+    //individuos da população. Precisamos refatorar para essa função só ser usada uma vez, salvarmos os dados
+    //de retorno no python e passarmos os dados para as funções de treinamento e simulação por referencia.
+    // Pycell faz isso
+
     let mut reader = csv::Reader::from_path(path)?;
 
     let result: Vec<Game> = reader

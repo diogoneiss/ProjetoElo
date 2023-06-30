@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 
-
 mod elo;
 pub mod experimentation;
 mod util;
@@ -10,14 +9,14 @@ use elo::util::league::LeagueTable;
 
 use experimentation::compare_simulation::run_experiments;
 use experimentation::run_config;
-use util::game::Game;
 use std;
+use util::game::Game;
 
 //TODO: extrair essas duas structs para arquivos separados
 use crate::experimentation::run_config::{RunConfig, RunHyperparameters};
 
 #[pyfunction]
-pub fn run(parameters: RunHyperparameters) -> PyResult<()>{
+pub fn run(parameters: RunHyperparameters) -> PyResult<()> {
     println!("\n\nRunning experiments with parameters: {:?}", &parameters);
     //print current directory
     let curr_directory: String = match std::env::current_dir() {
@@ -54,13 +53,9 @@ pub fn run(parameters: RunHyperparameters) -> PyResult<()>{
     Ok(())
 }
 
-
-
-
 /// Use this to get the parsed Vec<game>
 #[pyfunction]
 pub fn get_data(py: Python) -> PyResult<PyObject> {
-
     // sim, essa funcao é copiada da run. Ideal seria deixarmos toda a logica de dataset aqui e so passar ele parseado bonitinho pro run
     println!("Getting data..");
     let curr_directory: String = match std::env::current_dir() {
@@ -117,6 +112,7 @@ pub fn fitness_function(py: Python, partidas_py: PyObject, run_config_py:PyObjec
 
 /// This is the python module definition, everything that you want to use
 /// inside python must be declared here
+/// Modulo que vai pro python, necessário adicionar as funções e classes que ele vai usar
 #[pymodule]
 fn elo_compnat(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(run, m)?)?;
