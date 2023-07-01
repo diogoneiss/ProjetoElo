@@ -11,6 +11,7 @@ RunHyperparameters = elo_compnat.RunHyperparameters
 RunConfig = elo_compnat.RunConfig
 
 # consultar a funcao pra ver a ordem e oq cada um é
+# starting_elo, starting_year, backtest_years, random-variations, use_goals_diff, use_home_advantage, use_market_value, leagues_to_use
 hyperparams_list = [4444, 2003, 8, 20, 1, 0, 0, 1]
 
 # vai criar um objeto com os parametros e retornar a partir da lista
