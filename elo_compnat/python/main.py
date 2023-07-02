@@ -9,6 +9,8 @@ partidas = elo_compnat.get_data()
 
 RunHyperparameters = elo_compnat.RunHyperparameters
 RunConfig = elo_compnat.RunConfig
+CustomRating = elo_compnat.CustomRating
+CustomElo = elo_compnat.CustomElo
 
 # consultar a funcao pra ver a ordem e oq cada um é
 # starting_elo, starting_year, backtest_years, random-variations, use_goals_diff, use_home_advantage, use_market_value, leagues_to_use
@@ -21,7 +23,7 @@ hiperparametros_obj = RunHyperparameters.from_list(hyperparams_list)
 
 print(hiperparametros_obj.__dict__)
 
-genotype_list = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+genotype_list = [0.1, 0.2, 0.3, 0.4, 0.5, [1.0, 2.0]]
 run_config_obj = RunConfig.from_list(genotype_list)
 
 

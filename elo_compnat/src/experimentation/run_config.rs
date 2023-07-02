@@ -287,12 +287,14 @@ impl RunHyperparameters {
     }
 }
 
-
+#[pyclass]
 pub struct CustomRating {
     pub rating: f64
 }
 
+#[pymethods]
 impl CustomRating {
+    #[staticmethod]
     pub const fn new() -> Self {
         Self { rating: 1000.0}
     }
@@ -304,11 +306,16 @@ impl Default for CustomRating {
     }
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Hash)]
+#[pyclass]
 pub struct CustomElo {
     config: RunConfig
 }
 
+#[pymethods]
 impl CustomElo {
+
+    #[new]
     fn new(config: RunConfig) -> Self {
         Self { config }
     }
@@ -317,18 +324,18 @@ impl CustomElo {
         &self,
         player_one: &CustomRating,
         player_two: &CustomRating,
-        outcome: &Outcomes,
-        config: RunConfig,
+        outcome: u8,
+        config: &RunConfig,
         home_field_advantage: f64,
         absolute_goal_diff: f64,
         absolute_market_value_diff: f64
     ) -> (CustomRating, CustomRating) {
-        let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, w_division} = config;
+        let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, w_division} = config.clone();
         let (one_expected, two_expected) = expected_score(player_one, player_two, &config, home_field_advantage);
         let real_player_one_score: f64 = match outcome {
-            &Outcomes::WIN => 1.0,
-            &Outcomes::DRAW => 0.5,
-            &Outcomes::LOSS => 0.0
+            2 => 1.0,
+            1 => 0.5,
+            _ => 0.0
         };
         let real_player_two_score: f64 = 1.0 - real_player_one_score;
         let player_one_new_rate: f64 = player_one.rating + k_factor * w_division[0] * ((1.0 + absolute_market_value_diff).powf(market_value_weight)) *
@@ -340,8 +347,8 @@ impl CustomElo {
 }
 
 pub fn expected_score(player_one: &CustomRating, player_two: &CustomRating, config: &RunConfig, home_field_advantage: f64) -> (f64, f64) {
-    let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, w_division} = config;
-    let exponent: f64 = (player_two.rating - player_one.rating - home_field_advantage) / 400.0;
+    let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, w_division} = config.clone();
+    let exponent: f64 = (player_two.rating - player_one.rating - home_advantage) / 400.0;
     let exp_one: f64 = 1.0 / (1.0 + (10 as f64).powf(exponent));
     let exp_two = 1.0 - exp_one;
     (exp_one, exp_two)
