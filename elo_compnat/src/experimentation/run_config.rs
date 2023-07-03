@@ -3,6 +3,8 @@ use pyo3::types::IntoPyDict;
 use pyo3::{prelude::*, types::PyDict};
 use serde::{Deserialize, Serialize};
 use std::f64::EPSILON;
+use skillratings::Outcomes;
+
 
 /// this struct holds the necessary parameters for configuring the runtime of our experiments
 /// It is also used as the genotype, as it holds all the experimentation parameters
@@ -12,7 +14,7 @@ pub struct RunConfig {
     pub k_factor: f64,
     pub gamma: f64,
     pub home_advantage: f64,
-    pub hfa_weight: f64,
+    pub home_field_advantage_weight: f64,
     pub market_value_weight: f64,
     pub w_division: Vec<f64>,
 }
@@ -39,7 +41,7 @@ impl Default for RunConfig {
             k_factor: 20.0,
             gamma: 1.0,
             home_advantage: 0.075,
-            hfa_weight: 0.075,
+            home_field_advantage_weight: 0.075,
             market_value_weight: 1.0,
             w_division: vec![20.0],
         }
@@ -53,7 +55,7 @@ impl RunConfig {
         k_factor: f64,
         gamma: f64,
         home_advantage: f64,
-        hfa_weight: f64,
+        home_field_advantage_weight: f64,
         market_value_weight: f64,
         w_division: Vec<f64>,
     ) -> RunConfig {
@@ -61,7 +63,7 @@ impl RunConfig {
             k_factor,
             gamma,
             home_advantage,
-            hfa_weight,
+            home_field_advantage_weight,
             market_value_weight,
             w_division,
         }
@@ -74,7 +76,7 @@ impl RunConfig {
             dict.set_item("k_factor", self.k_factor)?;
             dict.set_item("gamma", self.gamma)?;
             dict.set_item("home_advantage", self.home_advantage)?;
-            dict.set_item("hfa_weight", self.hfa_weight)?;
+            dict.set_item("home_field_advantage_weight", self.home_field_advantage_weight)?;
             dict.set_item("market_value_weight", self.market_value_weight)?;
             dict.set_item("w_division", self.w_division.clone())?;
 
@@ -87,7 +89,7 @@ impl RunConfig {
         let k_factor = dict.get_item("k_factor").unwrap().extract()?;
         let gamma = dict.get_item("gamma").unwrap().extract()?;
         let home_advantage = dict.get_item("home_advantage").unwrap().extract()?;
-        let hfa_weight = dict.get_item("hfa_weight").unwrap().extract()?;
+        let home_field_advantage_weight = dict.get_item("home_field_advantage_weight").unwrap().extract()?;
         let market_value_weight = dict.get_item("market_value_weight").unwrap().extract()?;
         let w_division = dict.get_item("w_division").unwrap().extract()?;
 
@@ -95,7 +97,7 @@ impl RunConfig {
             k_factor,
             gamma,
             home_advantage,
-            hfa_weight,
+            home_field_advantage_weight,
             market_value_weight,
             w_division,
         ))
@@ -106,7 +108,7 @@ impl RunConfig {
         dict.set_item("k_factor", self.k_factor)?;
         dict.set_item("gamma", self.gamma)?;
         dict.set_item("home_advantage", self.home_advantage)?;
-        dict.set_item("hfa_weight", self.hfa_weight)?;
+        dict.set_item("home_field_advantage_weight", self.home_field_advantage_weight)?;
         dict.set_item("market_value_weight", self.market_value_weight)?;
         dict.set_item("w_division", self.w_division.clone())?;
 
@@ -123,7 +125,7 @@ impl RunConfig {
         let k_factor = params[0];
         let gamma = params[1];
         let home_advantage = params[2];
-        let hfa_weight = params[3];
+        let home_field_advantage_weight = params[3];
         let market_value_weight = params[4];
         let w_division: Vec<f64> = params[5..].to_vec();
 
@@ -131,7 +133,7 @@ impl RunConfig {
             k_factor,
             gamma,
             home_advantage,
-            hfa_weight,
+            home_field_advantage_weight,
             market_value_weight,
             w_division,
         ))
@@ -283,4 +285,71 @@ impl RunHyperparameters {
         dict.set_item("leagues_to_use", self.leagues_to_use)?;
         Ok(dict.into())
     }
+}
+
+#[pyclass]
+pub struct CustomRating {
+    pub rating: f64
+}
+
+#[pymethods]
+impl CustomRating {
+    #[staticmethod]
+    pub const fn new() -> Self {
+        Self { rating: 1000.0}
+    }
+}
+
+impl Default for CustomRating {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Hash)]
+#[pyclass]
+pub struct CustomElo {
+    config: RunConfig
+}
+
+#[pymethods]
+impl CustomElo {
+
+    #[new]
+    fn new(config: RunConfig) -> Self {
+        Self { config }
+    }
+
+    fn rate(
+        &self,
+        player_one: &CustomRating,
+        player_two: &CustomRating,
+        outcome: u8,
+        config: &RunConfig,
+        home_field_advantage: f64,
+        absolute_goal_diff: f64,
+        absolute_market_value_diff: f64
+    ) -> (CustomRating, CustomRating) {
+        let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, w_division} = config.clone();
+        let (one_expected, two_expected) = expected_score(player_one, player_two, &config, home_field_advantage);
+        let real_player_one_score: f64 = match outcome {
+            2 => 1.0,
+            1 => 0.5,
+            _ => 0.0
+        };
+        let real_player_two_score: f64 = 1.0 - real_player_one_score;
+        let player_one_new_rate: f64 = player_one.rating + k_factor * w_division[0] * ((1.0 + absolute_market_value_diff).powf(market_value_weight)) *
+            ((1.0 + absolute_goal_diff).powf(gamma)) * (real_player_one_score - one_expected);
+        let player_two_new_rate: f64 = player_two.rating + k_factor * w_division[0] * ((1.0 + absolute_market_value_diff).powf(market_value_weight)) *
+            ((1.0 + absolute_goal_diff).powf(gamma)) * (real_player_two_score - two_expected);
+        (CustomRating{rating: player_one_new_rate}, CustomRating{rating: player_two_new_rate})
+    }
+}
+
+pub fn expected_score(player_one: &CustomRating, player_two: &CustomRating, config: &RunConfig, home_field_advantage: f64) -> (f64, f64) {
+    let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, w_division} = config.clone();
+    let exponent: f64 = (player_two.rating - player_one.rating - home_advantage) / 400.0;
+    let exp_one: f64 = 1.0 / (1.0 + (10 as f64).powf(exponent));
+    let exp_two = 1.0 - exp_one;
+    (exp_one, exp_two)
 }
