@@ -104,5 +104,6 @@ pub fn simulate_season(
     let mut config_copy = run_config.clone();
     config_copy.tie_frequency = acc_tie_frequency / (games.len() as f64);
     config_copy.home_advantage += config_copy.home_field_advantage_weight * (acc_home_elo_variation - acc_away_elo_variation);
+    println!("{}", config_copy.tie_frequency);
     (starting_elos, simulated_games.to_vec(), config_copy)
 }
