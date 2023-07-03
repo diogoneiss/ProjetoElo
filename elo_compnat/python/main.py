@@ -23,14 +23,24 @@ hiperparametros_obj = RunHyperparameters.from_list(hyperparams_list)
 
 print(hiperparametros_obj.__dict__)
 
-genotype_list = [0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 1.0, 2.0]
+w_division = [40, 20]
+genotype_list = [40, 1, 1, 0.0075, 1, 0.5, 0.5, *w_division]
+
 run_config_obj = RunConfig.from_list(genotype_list)
 
+posicao_parametros_runconfig = {'k_factor': 0, 
+                                'gamma': 1, 
+                                'home_advantage': 2,
+                                'home_field_advantage_weight': 3, 
+                                'market_value_weight': 4, 
+                                'tie_frequency': 5, 
+                                'w_division': 6}
 
-err = elo_compnat.fitness_function(partidas, run_config_obj, hiperparametros_obj)
+
+err = elo_compnat.fitness_function(
+    partidas, run_config_obj, hiperparametros_obj)
 print("processou os dados\n\n\n")
-elo_compnat.fitness_function(partidas, run_config_obj, hiperparametros_obj)
-print("processou os dados\n\n\n")
+
 
 # usaremos isso aqui pra salvar em nuvem os resultados
 # insert_document()
