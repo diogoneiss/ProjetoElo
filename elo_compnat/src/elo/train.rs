@@ -6,22 +6,24 @@ use crate::util::game::Game;
 
 use super::util::season::{construct_seasons, get_seasons_in_season_map, SeasonMap};
 
-pub type RankedMatch = (EloRating, skillratings::Outcomes);
-pub type EloTable = HashMap<String, EloRating>;
+use super::super::{CustomRating, RunConfig};
+
+pub type RankedMatch = (CustomRating, skillratings::Outcomes);
+pub type EloTable = HashMap<String, CustomRating>;
 
 const DEBUG_INFO: bool = false;
 
 pub fn construct_elo_table_for_year(
     partidas: &Vec<Game>,
     starting_elos: Option<EloTable>,
-    elo_config: Option<&EloConfig>,
+    elo_config: Option<&RunConfig>,
 ) -> EloTable {
     // Construir tabela de elo se vier vazia
     let mut elo_table = match starting_elos {
         Some(elos) => elos,
         None => HashMap::new(),
     };
-    let default_config = EloConfig::default();
+    let default_config = RunConfig::default();
     let elo_config = match elo_config {
         Some(config) => config,
         None => &default_config,
@@ -40,14 +42,14 @@ pub fn construct_elo_table_for_year(
             elo_table
                 .get(team_name)
                 .cloned()
-                .unwrap_or_else(EloRating::new)
+                .unwrap_or_else(CustomRating::new)
         };
 
         let home_team_elo = current_elo(&home_team);
         let away_team_elo = current_elo(&away_team);
 
         // Salvar histórico de resultados desses times e elos
-        let mut insert_result = |team_name: &String, current_elo: EloRating, outcome| {
+        let mut insert_result = |team_name: &String, current_elo: CustomRating, outcome| {
             results_table
                 .entry(team_name.clone())
                 .or_insert(Vec::new())

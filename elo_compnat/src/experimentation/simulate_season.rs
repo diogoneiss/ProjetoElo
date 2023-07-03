@@ -1,12 +1,13 @@
-use skillratings::elo::{elo, expected_score, EloConfig, EloRating};
+use skillratings::elo::{elo, EloConfig, EloRating};
 
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 
 use crate::elo::train::EloTable;
+use crate::run;
 use crate::util::game::{Game, GameResult};
 
-use super::run_config::{RunConfig, RunHyperparameters};
+use super::run_config::{RunConfig, RunHyperparameters, CustomElo, CustomRating, expected_score};
 
 pub fn simulate_season(
     games: &[Game],
@@ -19,6 +20,8 @@ pub fn simulate_season(
     // print the estimated league table
     // It's important to note that we use the games for the season only for estimation purposes, the real game outcome is not used in the simulation (maybe the goal difference)
 
+    let config_copy = run_config.clone();
+
     // TODO: extrair a liga do game e retirar o peso w_i
     let mut simulated_games: Vec<Game> = games.to_vec();
     let mut starting_elos = original_elos.clone();
@@ -28,6 +31,8 @@ pub fn simulate_season(
         k: run_config.k_factor,
     };
 
+    let home_field_advantage: f64 = 100.0;
+
     // loop over the games
     for (i, game) in games.iter().enumerate() {
         // get the home and away teams from match
@@ -36,7 +41,7 @@ pub fn simulate_season(
 
         // get the respective elos from the simulated_elos hashmap
 
-        let mut new_elo = EloRating::new();
+        let mut new_elo = CustomRating::new();
         new_elo.rating = experiment_config.starting_elo.into();
 
         let home_elo = match starting_elos.get(&home) {
@@ -50,24 +55,21 @@ pub fn simulate_season(
         };
 
         // calculate expected scores
-        let (exp_home, exp_away) = expected_score(&home_elo, &away_elo);
+        let (exp_tie, exp_home, exp_away) = expected_score(&home_elo, &away_elo, run_config, home_field_advantage);
 
         //generate two random numbers between 0 and 1, determine the winner (or draw) and update the elos
-        let result_home: f64 = rng.gen();
-        let result_away: f64 = rng.gen();
+        let random_result: f64 = rng.gen();
 
-        // if the exp score is low, the chances of yielding a random number lower that exp is the probability of winning (small)
-        // if the exp score is high, like 0.8, the chances of yielding a random number lower than exp is 0.8, so the probability of winning is high
-        // This sucks, but as we do not have the p_draw yet, it must suffice.
-        let home_wins = result_home < exp_home;
-        let away_wins = result_away < exp_away;
+        let tie = random_result < exp_tie;
+        let home_wins = random_result > exp_tie && random_result < exp_tie + exp_home;
+        let away_wins = !(tie || home_wins);
 
         let mut simulated_game = game.clone();
 
         // assign the result to the simulated game according to home team's perspective
-        simulated_game.result = match (home_wins, away_wins) {
-            (true, false) => GameResult::H,
-            (false, true) => GameResult::A,
+        simulated_game.result = match (tie, home_wins, away_wins) {
+            (false, true, false) => GameResult::H,
+            (false, false, true) => GameResult::A,
             _ => GameResult::D,
         };
 
