@@ -21,6 +21,8 @@ pub fn construct_elo_table_for_year(
         Some(elos) => elos,
         None => HashMap::new(),
     };
+
+
     let default_config = RunConfig::default();
     let elo_config = match elo_config {
         Some(config) => config,
@@ -121,7 +123,6 @@ pub fn construct_elo_table_for_time_series(
     check_time_series_interval(&years_in_season_map, &desired_range);
 
     let mut starting_elo_table: Option<EloTable> = None;
-
     for year in desired_range.into_iter() {
         let season = seasons_map.get(&year).unwrap();
         let partidas = &season.matches;

@@ -21,14 +21,13 @@ pub fn run_experiments(
 ) -> Vec<f64> {
     // Setup: Configure the required structs
     let elo_config = run_config.clone();
-
     // Pre processing: split the games into seasons, determine start and end years of backtesting
     let end_year = experiment_config.starting_year + experiment_config.backtest_years;
 
     let seasons_map = season::construct_seasons(all_games);
 
     // 1st stage: do the elo training with the desired years of data. this is the backtesting
-    let mut elo_table_at_start = construct_elo_table_for_time_series(
+    let elo_table_at_start = construct_elo_table_for_time_series(
         all_games,
         Some(&elo_config),
         experiment_config.starting_year,

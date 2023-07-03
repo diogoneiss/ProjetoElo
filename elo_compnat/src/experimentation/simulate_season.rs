@@ -39,13 +39,13 @@ pub fn simulate_season(
         new_elo.rating = experiment_config.starting_elo.into();
 
         let home_elo = match starting_elos.get(&home) {
-            Some(elo) => &*elo,
-            None => &new_elo,
+            Some(elo) => elo.clone(),
+            None => new_elo.clone(),
         };
 
         let away_elo = match starting_elos.get(&away) {
-            Some(elo) => &*elo,
-            None => &new_elo,
+            Some(elo) => elo.clone(),
+            None => new_elo.clone(),
         };
 
         // calculate expected scores
@@ -69,7 +69,7 @@ pub fn simulate_season(
             _ => GameResult::D,
         };
 
-        match simulated_game.result {
+        match game.result {
             GameResult::D => {acc_tie_frequency += 1.0},
             _ => ()
         };
@@ -100,10 +100,8 @@ pub fn simulate_season(
         simulated_games[i] = simulated_game;
     }
 
-    
     let mut config_copy = run_config.clone();
     config_copy.tie_frequency = acc_tie_frequency / (games.len() as f64);
     config_copy.home_advantage += config_copy.home_field_advantage_weight * (acc_home_elo_variation - acc_away_elo_variation);
-    println!("{}", config_copy.tie_frequency);
     (starting_elos, simulated_games.to_vec(), config_copy)
 }

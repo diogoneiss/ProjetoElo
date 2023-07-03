@@ -305,7 +305,7 @@ pub struct CustomRating {
 impl CustomRating {
     #[staticmethod]
     pub const fn new() -> Self {
-        Self { rating: 1000.0}
+        Self { rating: 1000.0 }
     }
 }
 
