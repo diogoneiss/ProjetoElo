@@ -16,6 +16,7 @@ pub struct RunConfig {
     pub home_advantage: f64,
     pub home_field_advantage_weight: f64,
     pub market_value_weight: f64,
+    pub tie_frequency: f64,
     pub w_division: Vec<f64>,
 }
 
@@ -43,6 +44,7 @@ impl Default for RunConfig {
             home_advantage: 0.075,
             home_field_advantage_weight: 0.075,
             market_value_weight: 1.0,
+            tie_frequency: 0.5,
             w_division: vec![20.0],
         }
     }
@@ -57,6 +59,7 @@ impl RunConfig {
         home_advantage: f64,
         home_field_advantage_weight: f64,
         market_value_weight: f64,
+        tie_frequency: f64,
         w_division: Vec<f64>,
     ) -> RunConfig {
         RunConfig {
@@ -65,6 +68,7 @@ impl RunConfig {
             home_advantage,
             home_field_advantage_weight,
             market_value_weight,
+            tie_frequency,
             w_division,
         }
     }
@@ -78,6 +82,7 @@ impl RunConfig {
             dict.set_item("home_advantage", self.home_advantage)?;
             dict.set_item("home_field_advantage_weight", self.home_field_advantage_weight)?;
             dict.set_item("market_value_weight", self.market_value_weight)?;
+            dict.set_item("tie_frequency", self.tie_frequency)?;
             dict.set_item("w_division", self.w_division.clone())?;
 
             Ok(dict.to_object(py))
@@ -91,6 +96,7 @@ impl RunConfig {
         let home_advantage = dict.get_item("home_advantage").unwrap().extract()?;
         let home_field_advantage_weight = dict.get_item("home_field_advantage_weight").unwrap().extract()?;
         let market_value_weight = dict.get_item("market_value_weight").unwrap().extract()?;
+        let tie_frequency = dict.get_item("tie_frequency").unwrap().extract()?;
         let w_division = dict.get_item("w_division").unwrap().extract()?;
 
         Ok(RunConfig::new(
@@ -99,6 +105,7 @@ impl RunConfig {
             home_advantage,
             home_field_advantage_weight,
             market_value_weight,
+            tie_frequency,
             w_division,
         ))
     }
@@ -110,13 +117,14 @@ impl RunConfig {
         dict.set_item("home_advantage", self.home_advantage)?;
         dict.set_item("home_field_advantage_weight", self.home_field_advantage_weight)?;
         dict.set_item("market_value_weight", self.market_value_weight)?;
+        dict.set_item("tie_frequency", self.tie_frequency)?;
         dict.set_item("w_division", self.w_division.clone())?;
 
         Ok(dict.into())
     }
     #[staticmethod]
     fn from_list(params: Vec<f64>) -> PyResult<Self> {
-        if params.len() < 6 {
+        if params.len() < 7 {
             return Err(PyValueError::new_err(
                 "The input list should have at least 6 elements.",
             ));
@@ -127,7 +135,8 @@ impl RunConfig {
         let home_advantage = params[2];
         let home_field_advantage_weight = params[3];
         let market_value_weight = params[4];
-        let w_division: Vec<f64> = params[5..].to_vec();
+        let tie_frequency = params[5];
+        let w_division: Vec<f64> = params[6..].to_vec();
 
         Ok(RunConfig::new(
             k_factor,
@@ -135,6 +144,7 @@ impl RunConfig {
             home_advantage,
             home_field_advantage_weight,
             market_value_weight,
+            tie_frequency,
             w_division,
         ))
     }
@@ -330,8 +340,8 @@ impl CustomElo {
         absolute_goal_diff: f64,
         absolute_market_value_diff: f64
     ) -> (CustomRating, CustomRating) {
-        let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, w_division} = config.clone();
-        let (one_expected, two_expected) = expected_score(player_one, player_two, &config, home_field_advantage);
+        let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, tie_frequency, w_division} = config.clone();
+        let (tie_expected, one_expected, two_expected) = expected_score(player_one, player_two, &config, home_field_advantage);
         let real_player_one_score: f64 = match outcome {
             2 => 1.0,
             1 => 0.5,
@@ -346,10 +356,12 @@ impl CustomElo {
     }
 }
 
-pub fn expected_score(player_one: &CustomRating, player_two: &CustomRating, config: &RunConfig, home_field_advantage: f64) -> (f64, f64) {
-    let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, w_division} = config.clone();
+pub fn expected_score(player_one: &CustomRating, player_two: &CustomRating, config: &RunConfig, home_field_advantage: f64) -> (f64, f64, f64) {
+    let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, tie_frequency, w_division} = config.clone();
     let exponent: f64 = (player_two.rating - player_one.rating - home_advantage) / 400.0;
-    let exp_one: f64 = 1.0 / (1.0 + (10 as f64).powf(exponent));
-    let exp_two = 1.0 - exp_one;
-    (exp_one, exp_two)
+    let denominator: f64 = (10 as f64).powf(exponent) + (10 as f64).powf(-1.0 * exponent) + tie_frequency;
+    let exp_one: f64 = (10 as f64).powf(exponent) / denominator;
+    let exp_two = (10 as f64).powf(-1.0 * exponent) / denominator;
+    let exp_tie: f64 = 1.0 - exp_one - exp_two;
+    (exp_tie, exp_one, exp_two)
 }
