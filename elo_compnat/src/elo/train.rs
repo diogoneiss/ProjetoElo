@@ -1,12 +1,10 @@
-use skillratings::elo::{elo, EloConfig, EloRating};
-
 use std::collections::HashMap;
 
 use crate::util::game::Game;
 
 use super::util::season::{construct_seasons, get_seasons_in_season_map, SeasonMap};
 
-use super::super::{CustomRating, RunConfig};
+use super::super::{CustomRating, RunConfig, CustomElo};
 
 pub type RankedMatch = (CustomRating, skillratings::Outcomes);
 pub type EloTable = HashMap<String, CustomRating>;
@@ -56,11 +54,16 @@ pub fn construct_elo_table_for_year(
                 .push((current_elo, outcome));
         };
 
-        insert_result(&home_team, home_team_elo, home_outcome);
-        insert_result(&away_team, away_team_elo, away_outcome);
+        insert_result(&home_team, home_team_elo.clone(), home_outcome);
+        insert_result(&away_team, away_team_elo.clone(), away_outcome);
+
+        let custom_elo = CustomElo{config: elo_config.clone()};
+
+        let absolute_goal_diff: f64 = ((partida.home_score as i8) - (partida.away_score as i8)).abs().into();
+        let absolute_market_value_diff: f64 = 10.0; // preencher corrertamente conform tabela
 
         let (new_player_home, new_player_away) =
-            elo(&home_team_elo, &away_team_elo, &home_outcome, elo_config);
+            custom_elo.rate(&home_team_elo, &away_team_elo, partida.result, absolute_goal_diff, absolute_market_value_diff);
 
         if DEBUG_INFO && (home_team == "Cruzeiro" || away_team == "Cruzeiro") {
             println!("{:?}", partida);
@@ -98,11 +101,11 @@ fn check_time_series_interval(
 
 pub fn construct_elo_table_for_time_series(
     all_matches: &[Game],
-    elo_config: Option<&EloConfig>,
+    elo_config: Option<&RunConfig>,
     start_year: u16,
     end_year: u16,
 ) -> EloTable {
-    let default_config = EloConfig::default();
+    let default_config = RunConfig::default();
     let elo_config = match elo_config {
         Some(config) => config,
         None => &default_config,

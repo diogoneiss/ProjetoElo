@@ -3,7 +3,7 @@ use pyo3::types::IntoPyDict;
 use serde::{Deserialize, Serialize};
 use skillratings::Outcomes;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 #[pyclass]
 pub enum GameResult {
     H,

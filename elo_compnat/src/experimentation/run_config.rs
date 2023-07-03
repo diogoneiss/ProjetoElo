@@ -1,10 +1,8 @@
 use pyo3::exceptions::PyValueError;
-use pyo3::types::IntoPyDict;
 use pyo3::{prelude::*, types::PyDict};
 use serde::{Deserialize, Serialize};
 use std::f64::EPSILON;
-use skillratings::Outcomes;
-
+use crate::util::game::{Game, GameResult};
 
 /// this struct holds the necessary parameters for configuring the runtime of our experiments
 /// It is also used as the genotype, as it holds all the experimentation parameters
@@ -297,6 +295,7 @@ impl RunHyperparameters {
     }
 }
 
+#[derive(Debug, Clone)]
 #[pyclass]
 pub struct CustomRating {
     pub rating: f64
@@ -319,33 +318,25 @@ impl Default for CustomRating {
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, Hash)]
 #[pyclass]
 pub struct CustomElo {
-    config: RunConfig
+    pub config: RunConfig
 }
 
-#[pymethods]
 impl CustomElo {
-
-    #[new]
-    fn new(config: RunConfig) -> Self {
-        Self { config }
-    }
-
-    fn rate(
+    
+    pub fn rate(
         &self,
         player_one: &CustomRating,
         player_two: &CustomRating,
-        outcome: u8,
-        config: &RunConfig,
-        home_field_advantage: f64,
+        outcome: GameResult,
         absolute_goal_diff: f64,
         absolute_market_value_diff: f64
     ) -> (CustomRating, CustomRating) {
-        let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, tie_frequency, w_division} = config.clone();
-        let (tie_expected, one_expected, two_expected) = expected_score(player_one, player_two, &config, home_field_advantage);
+        let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, tie_frequency, w_division} = self.config.clone();
+        let (tie_expected, one_expected, two_expected) = expected_score(player_one, player_two, &self.config);
         let real_player_one_score: f64 = match outcome {
-            2 => 1.0,
-            1 => 0.5,
-            _ => 0.0
+            GameResult::H => 1.0,
+            GameResult::D => 0.5,
+            GameResult::A => 0.0
         };
         let real_player_two_score: f64 = 1.0 - real_player_one_score;
         let player_one_new_rate: f64 = player_one.rating + k_factor * w_division[0] * ((1.0 + absolute_market_value_diff).powf(market_value_weight)) *
@@ -356,7 +347,7 @@ impl CustomElo {
     }
 }
 
-pub fn expected_score(player_one: &CustomRating, player_two: &CustomRating, config: &RunConfig, home_field_advantage: f64) -> (f64, f64, f64) {
+pub fn expected_score(player_one: &CustomRating, player_two: &CustomRating, config: &RunConfig) -> (f64, f64, f64) {
     let RunConfig {k_factor, gamma, home_advantage, home_field_advantage_weight, market_value_weight, tie_frequency, w_division} = config.clone();
     let exponent: f64 = (player_two.rating - player_one.rating - home_advantage) / 400.0;
     let denominator: f64 = (10 as f64).powf(exponent) + (10 as f64).powf(-1.0 * exponent) + tie_frequency;
