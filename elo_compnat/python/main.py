@@ -23,7 +23,7 @@ hiperparametros_obj = RunHyperparameters.from_list(hyperparams_list)
 
 print(hiperparametros_obj.__dict__)
 
-genotype_list = [0.1, 0.2, 0.3, 0.4, 0.5, [1.0, 2.0]]
+genotype_list = [0.1, 0.2, 0.3, 0.4, 0.5, 1.0, 1.0, 2.0]
 run_config_obj = RunConfig.from_list(genotype_list)
 
 

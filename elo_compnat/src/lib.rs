@@ -7,8 +7,8 @@ mod util;
 use elo::train::construct_elo_table_for_time_series;
 use elo::util::league::LeagueTable;
 
-use experimentation::compare_simulation::run_experiments;
-use experimentation::run_config;
+use experimentation::{run_all_experiments::run_experiments, run_config::CustomRating};
+use experimentation::run_config::{self, CustomElo};
 use std;
 use util::game::Game;
 
@@ -120,6 +120,9 @@ fn elo_compnat(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(fitness_function, m)?)?;
     m.add_class::<RunHyperparameters>()?;
     m.add_class::<RunConfig>()?;
+    m.add_class::<CustomElo>()?;
+    m.add_class::<CustomRating>()?;
+
 
     Ok(())
 }
