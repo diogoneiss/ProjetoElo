@@ -12,7 +12,7 @@ use crate::elo::{
 
 use crate::{experimentation::simulate_season::simulate_season, util::game::Game};
 
-use super::{compare_simulation, run_config};
+use super::{run_all_experiments, run_config};
 
 /// Performs the backtesting for t years and experiments with the elo metric for n-t remaining years.
 /// Note that the next year is based on the real year, not the simulated one.
@@ -154,7 +154,7 @@ fn run_season_experiment(
     // tabela_fake.print_final_table();
 
     //calculate distance between real and simulated elo
-    let elo_diff = compare_simulation::compare_elo_tables(&real_elo, &elo_simulated);
+    let elo_diff = run_all_experiments::compare_elo_tables(&real_elo, &elo_simulated);
 
     /*
         println!("--------------- Elo diff ----------- \n");
