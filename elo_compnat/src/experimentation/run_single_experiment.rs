@@ -16,7 +16,7 @@ use super::{run_all_experiments, run_config};
 
 /// Given an starting elo and matches, simulates the season and compares it to the real season and the real match results, returning the elo difference table
 /// TODO: include a flag to determine if we should use the real or simulated elo for the next season. Maybe create an enum? This is noted in the code as "NEXT OPTION"
-fn run_season_experiment(
+pub fn run_season_experiment(
     season_games: &Vec<Game>,
     starting_elo: &EloTable,
     run_config: &run_config::RunConfig,
