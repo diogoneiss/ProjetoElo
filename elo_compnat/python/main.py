@@ -14,7 +14,7 @@ CustomElo = elo_compnat.CustomElo
 
 # consultar a funcao pra ver a ordem e oq cada um é
 # starting_elo, starting_year, backtest_years, random-variations, use_goals_diff, use_home_advantage, use_market_value, leagues_to_use
-hyperparams_list = [4444, 2003, 8, 20, 1, 0, 0, 1]
+hyperparams_list = [1000, 2003, 8, 20, 1, 0, 0, 1]
 
 # vai criar um objeto com os parametros e retornar a partir da lista
 # poderiamos fazer um mapping de dict <-> RunHyperparameters, mas da na mesma
@@ -28,13 +28,31 @@ genotype_list = [40, 1, 1, 0.0075, 1, 0.5, 0.5, *w_division]
 
 run_config_obj = RunConfig.from_list(genotype_list)
 
-posicao_parametros_runconfig = {'k_factor': 0, 
-                                'gamma': 1, 
+posicao_parametros_runconfig = {'k_factor': 0,
+                                'gamma': 1,
                                 'home_advantage': 2,
-                                'home_field_advantage_weight': 3, 
-                                'market_value_weight': 4, 
-                                'tie_frequency': 5, 
+                                'home_field_advantage_weight': 3,
+                                'market_value_weight': 4,
+                                'tie_frequency': 5,
                                 'w_division': 6}
+
+# https://pygad.readthedocs.io/en/latest/pygad.html#more-about-the-gene-space-parameter
+
+k_factor = {'low': 10,
+            'high': 60,
+            "step": 1.0
+            }
+
+gamma = {'low': 0.3, 'high': 2}
+home_advantage = {'low': 0, 'high': 2}
+home_field_advantage_weight = {'low': 0, 'high': 1}
+market_value_weight = {'low': 0, 'high': 1}
+tie_frequency = {'low': 0, 'high': 1}
+
+w_division = [{'low': 10, 'high': 80}, {'low': 10, 'high': 80}]
+
+gene_space = [k_factor, gamma, home_advantage, home_field_advantage_weight,
+              market_value_weight, tie_frequency, w_division]
 
 
 err = elo_compnat.fitness_function(
@@ -63,11 +81,9 @@ fitness_function = fitness_func
 num_generations = 50
 num_parents_mating = 4
 
-sol_per_pop = 80
-num_genes = len(function_inputs)
+sol_per_pop = 20
+num_genes = len(gene_space)
 
-init_range_low = -2
-init_range_high = 5
 
 elitism_percentage = 0.1
 keep_elitism = max(1, int(elitism_percentage * sol_per_pop))
@@ -107,11 +123,9 @@ then the crossover step is bypassed which means no crossover is applied and thus
 The next generation will use the solutions in the current population.
 """
 
-mutation_type = "random"
-mutation_probability = 0.1
-
-# TODO: colocar limite nos parametros aqui
-gene_space = None
+mutation_type = "adaptive"
+# todo: variar isso
+mutation_probability = [0.25, 0.1]
 
 save_best_solutions = True
 
@@ -127,8 +141,6 @@ ga_instance = pygad.GA(
     fitness_func=fitness_function,
     sol_per_pop=sol_per_pop,
     num_genes=num_genes,
-    init_range_low=init_range_low,
-    init_range_high=init_range_high,
     parent_selection_type=parent_selection_type,
     keep_parents=keep_parents,
     crossover_type=crossover_type,
@@ -137,6 +149,8 @@ ga_instance = pygad.GA(
     mutation_probability=mutation_probability,
     save_best_solutions=save_best_solutions,
     parallel_processing=parallel_processing,
+    allow_duplicate_genes=False,
+    gene_space=gene_space,
     random_seed=random_seed,
 )
 
@@ -146,7 +160,9 @@ ga_instance.run()
 
 
 solution, solution_fitness, solution_idx = ga_instance.best_solution()
-prediction = np.sum(np.array(function_inputs) * solution)
+
+# todo: montar tabela de elo aqui
+prediction = solution
 
 print(f"Parameters of the best solution : {solution}")
 print(f"Fitness value of the best solution = {solution_fitness}")
