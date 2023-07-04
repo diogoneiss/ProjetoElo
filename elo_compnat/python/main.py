@@ -1,7 +1,7 @@
 import elo_compnat
 import numpy as np
 import pygad
-
+import matplotlib.pyplot as plt
 from cache import insert_document
 
 # todo: parametrizar isso aqui para filtrar pelo nome do dataset
@@ -14,7 +14,7 @@ CustomElo = elo_compnat.CustomElo
 
 # consultar a funcao pra ver a ordem e oq cada um é
 # starting_elo, starting_year, backtest_years, random-variations, use_goals_diff, use_home_advantage, use_market_value, leagues_to_use
-hyperparams_list = [1000, 2003, 8, 20, 1, 0, 0, 1]
+hyperparams_list = [1000, 2003, 8, 100, 0, 0, 0, 1]
 
 # vai criar um objeto com os parametros e retornar a partir da lista
 # poderiamos fazer um mapping de dict <-> RunHyperparameters, mas da na mesma
@@ -51,13 +51,25 @@ tie_frequency = {'low': 0, 'high': 1}
 
 w_division = [{'low': 10, 'high': 80}, {'low': 10, 'high': 80}]
 
+# todo: fazer o gene space ser um dict com os parametros e os valores
 gene_space = [k_factor, gamma, home_advantage, home_field_advantage_weight,
-              market_value_weight, tie_frequency, w_division]
+              market_value_weight, tie_frequency, w_division[0], w_division[1]]
 
 
 err = elo_compnat.fitness_function(
     partidas, run_config_obj, hiperparametros_obj)
-print("processou os dados\n\n\n")
+
+experiment_start_year = hyperparams_list[1]+hyperparams_list[2]
+plot = True
+
+if plot:
+    x = np.arange(experiment_start_year, experiment_start_year+len(err), 1)
+
+    plt.plot(x, err)
+    plt.title("Erros do modelo")
+    plt.xlabel(f"Temporada simulada")
+    plt.show()
+
 
 
 # usaremos isso aqui pra salvar em nuvem os resultados
@@ -156,14 +168,14 @@ ga_instance = pygad.GA(
 
 # não usamos comp nat ainda
 
-ga_instance.run()
+#ga_instance.run()
 
 
-solution, solution_fitness, solution_idx = ga_instance.best_solution()
+#solution, solution_fitness, solution_idx = ga_instance.best_solution()
 
 # todo: montar tabela de elo aqui
-prediction = solution
+#prediction = solution
 
-print(f"Parameters of the best solution : {solution}")
-print(f"Fitness value of the best solution = {solution_fitness}")
-print(f"Predicted output based on the best solution : {prediction}")
+#print(f"Parameters of the best solution : {solution}")
+#print(f"Fitness value of the best solution = {solution_fitness}")
+#print(f"Predicted output based on the best solution : {prediction}")
