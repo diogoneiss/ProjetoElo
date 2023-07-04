@@ -18,7 +18,7 @@ use util::game::Game;
 use crate::experimentation::run_config::{RunConfig, RunHyperparameters};
 
 #[pyfunction]
-pub fn run(parameters: RunHyperparameters) -> PyResult<()> {
+pub fn run(parameters: RunHyperparameters, config: Option<&RunConfig>) -> PyResult<()> {
     println!("\n\nRunning experiments with parameters: {:?}", &parameters);
     //print current directory
     let curr_directory: String = match std::env::current_dir() {
@@ -45,12 +45,15 @@ pub fn run(parameters: RunHyperparameters) -> PyResult<()> {
         })
         .unwrap();
 
-    let run_config = run_config::RunConfig::default();
-    let experiment_config = run_config::RunHyperparameters::default();
+    let run_config = match config {
+        Some(config) => config.clone(),
+        None => run_config::RunConfig::default(),
+    };
 
-    let errors = run_experiments(&partidas, &run_config, &experiment_config);
+    
+    let errors = run_experiments(&partidas, &run_config, &parameters);
 
-    experiment_config.print_errors_by_year(&errors);
+    parameters.print_errors_by_year(&errors);
 
     Ok(())
 }
@@ -109,7 +112,7 @@ pub fn fitness_function(
         &hyperparameters
     );
     println!("Genotypes for this run: {:?}", &run_config);
-    println!("1a partida: {:?}", partidas[0]);
+    //println!("1a partida: {:?}", partidas[0]);
 
     let errors = run_experiments(&partidas, &run_config, &hyperparameters);
 

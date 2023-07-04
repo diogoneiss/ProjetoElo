@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::experimentation::run_config;
 use crate::util::game::Game;
 
 use super::util::season::{construct_seasons, get_seasons_in_season_map, SeasonMap};
@@ -15,6 +16,7 @@ pub fn construct_elo_table_for_year(
     partidas: &Vec<Game>,
     starting_elos: Option<EloTable>,
     elo_config: Option<&RunConfig>,
+    run_hyperparameters: &run_config::RunHyperparameters,
 ) -> EloTable {
     // Construir tabela de elo se vier vazia
     let mut elo_table = match starting_elos {
@@ -41,11 +43,23 @@ pub fn construct_elo_table_for_year(
             elo_table
                 .get(team_name)
                 .cloned()
-                .unwrap_or_else(CustomRating::new)
+                .unwrap_or_else(|| CustomRating {rating: run_hyperparameters.starting_elo as f64})
         };
 
         let home_team_elo = current_elo(&home_team);
         let away_team_elo = current_elo(&away_team);
+
+
+        if home_team_elo.rating.is_nan()  {
+            println!("Elo is NaN for home team: {} at match {}", &home_team, partida.id);
+            //let results_home = results_table.get(&home_team).unwrap();
+           // println!("Results: {:?}", results_home);
+        }
+        if away_team_elo.rating.is_nan() {
+            println!("Elo is NaN for away_team: {} at match {}", &away_team, partida.id);
+            //let results_home = results_table.get(&away_team).unwrap();
+           // println!("Results: {:?}", results_home);
+        }
 
         // Salvar histórico de resultados desses times e elos
         let mut insert_result = |team_name: &String, current_elo: &CustomRating, outcome| {
@@ -62,7 +76,7 @@ pub fn construct_elo_table_for_year(
             config: elo_config.clone(),
         };
 
-        let absolute_goal_diff: f64 = ((partida.home_score as i8) - (partida.away_score as i8))
+        let absolute_goal_diff: f64 = ((partida.home_score as i16) - (partida.away_score as i16))
             .abs()
             .into();
         let absolute_market_value_diff: f64 = 0.05; // preencher corrertamente conform tabela
@@ -97,6 +111,7 @@ fn check_time_series_interval(
 pub fn construct_elo_table_for_time_series(
     all_matches: &[Game],
     elo_config: Option<&RunConfig>,
+    run_hyperparameters: &run_config::RunHyperparameters,
     start_year: u16,
     end_year: u16,
 ) -> EloTable {
@@ -120,7 +135,7 @@ pub fn construct_elo_table_for_time_series(
         let season = seasons_map.get(&year).unwrap();
         let partidas = &season.matches;
         let elo_table =
-            construct_elo_table_for_year(partidas, starting_elo_table, Some(elo_config));
+            construct_elo_table_for_year(partidas, starting_elo_table, Some(elo_config), &run_hyperparameters );
         starting_elo_table = Some(elo_table.clone());
 
         if DEBUG_INFO {

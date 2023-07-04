@@ -356,18 +356,28 @@ impl CustomElo {
             GameResult::A => 0.0,
         };
         let real_player_two_score: f64 = 1.0 - real_player_one_score;
-        let player_one_new_rate: f64 = player_one.rating
-            + k_factor
+
+        let change_p1 = k_factor
                 * w_division[0]
                 * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
                 * ((1.0 + absolute_goal_diff).powf(gamma))
                 * (real_player_one_score - one_expected);
-        let player_two_new_rate: f64 = player_two.rating
-            + k_factor
+
+        let mut player_one_new_rate: f64 = player_one.rating + change_p1;
+        if player_one_new_rate.is_infinite() {
+            player_one_new_rate = if player_one_new_rate.is_sign_positive() { f64::MAX } else { f64::MIN };
+        }
+
+        let change_p2 =  k_factor
                 * w_division[0]
                 * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
                 * ((1.0 + absolute_goal_diff).powf(gamma))
                 * (real_player_two_score - two_expected);
+        let mut player_two_new_rate: f64 = player_two.rating + change_p2;
+
+        if player_two_new_rate.is_infinite() {
+            player_two_new_rate = if player_two_new_rate.is_sign_positive() { f64::MAX } else { f64::MIN };
+        }
         (
             CustomRating {
                 rating: player_one_new_rate,
@@ -396,6 +406,16 @@ pub fn expected_score(
     let basis: f64 = 10.0;
     let exponent = (player_two.rating - player_one.rating - home_advantage) / 400.0;
     let denominator = basis.powf(exponent) + basis.powf(-1.0 * exponent) + tie_frequency;
+    // check if denominator is infinite
+    if denominator.is_infinite() {
+        if denominator.is_sign_positive() {
+            return (0.0, 0.0, 1.0);
+        } else {
+            return (0.0, 1.0, 0.0);
+        }
+    } else if denominator.is_nan() {
+        return (1.0, 0.0, 0.0);
+    }
     let exp_one = basis.powf(exponent) / denominator;
     let exp_two = basis.powf(-1.0 * exponent) / denominator;
     let exp_tie = 1.0 - exp_one - exp_two;

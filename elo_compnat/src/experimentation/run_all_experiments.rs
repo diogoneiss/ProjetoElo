@@ -1,4 +1,4 @@
-use std::{collections::HashMap, vec};
+use std::{collections::HashMap};
 
 use crate::{elo::{
     train::{
@@ -30,6 +30,7 @@ pub fn run_experiments(
     let elo_table_at_start = construct_elo_table_for_time_series(
         all_games,
         Some(&elo_config),
+        &experiment_config,
         experiment_config.starting_year,
         end_year,
     );
@@ -123,18 +124,6 @@ pub fn run_experiments(
         .collect::<Vec<f64>>();
  
     mean_errors_for_each_season
-}
-
-fn compare_elo_tables(real_elo: &EloTable, simulated_elo: &EloTable) -> HashMap<String, f64> {
-    let mut elo_diff: HashMap<String, f64> = HashMap::new();
-
-    for (team, elo) in real_elo.iter() {
-        let simulated_elo = simulated_elo.get(team).unwrap();
-        let diff = elo.rating - simulated_elo.rating;
-        elo_diff.insert(team.clone(), diff);
-    }
-
-    elo_diff
 }
 
 

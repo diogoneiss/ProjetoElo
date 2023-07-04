@@ -60,7 +60,7 @@ err = elo_compnat.fitness_function(
     partidas, run_config_obj, hiperparametros_obj)
 
 experiment_start_year = hyperparams_list[1]+hyperparams_list[2]
-plot = True
+plot = False
 
 if plot:
     x = np.arange(experiment_start_year, experiment_start_year+len(err), 1)
@@ -83,8 +83,14 @@ desired_output = 44
 
 
 def fitness_func(ga_instance, solution, solution_idx):
-    output = np.sum(solution * function_inputs)
-    fitness = 1.0 / np.abs(output - desired_output)
+    # global parameters, we dont change them
+    global partidas, hiperparametros_obj
+    print(solution)
+    run_config_obj = RunConfig.from_list(solution)
+    print(run_config_obj.__dict__)
+
+    err = elo_compnat.fitness_function(partidas, run_config_obj, hiperparametros_obj)
+    fitness = np.divide(1, np.sum(np.abs(err)))
     return fitness
 
 
@@ -93,7 +99,7 @@ fitness_function = fitness_func
 num_generations = 50
 num_parents_mating = 4
 
-sol_per_pop = 20
+sol_per_pop = 8
 num_genes = len(gene_space)
 
 
@@ -143,7 +149,7 @@ save_best_solutions = True
 
 # olhar melhor isso
 
-parallel_processing = 10
+parallel_processing = 4
 
 random_seed = 42
 
@@ -161,21 +167,21 @@ ga_instance = pygad.GA(
     mutation_probability=mutation_probability,
     save_best_solutions=save_best_solutions,
     parallel_processing=parallel_processing,
-    allow_duplicate_genes=False,
+    allow_duplicate_genes=True,
     gene_space=gene_space,
     random_seed=random_seed,
 )
 
 # não usamos comp nat ainda
 
-#ga_instance.run()
+ga_instance.run()
 
 
-#solution, solution_fitness, solution_idx = ga_instance.best_solution()
+solution, solution_fitness, solution_idx = ga_instance.best_solution()
 
 # todo: montar tabela de elo aqui
-#prediction = solution
+prediction = solution
 
-#print(f"Parameters of the best solution : {solution}")
-#print(f"Fitness value of the best solution = {solution_fitness}")
-#print(f"Predicted output based on the best solution : {prediction}")
+print(f"Parameters of the best solution : {solution}")
+print(f"Fitness value of the best solution = {solution_fitness}")
+print(f"Predicted output based on the best solution : {prediction}")

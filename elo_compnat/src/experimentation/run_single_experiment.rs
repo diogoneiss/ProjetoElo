@@ -15,7 +15,6 @@ use crate::{experimentation::simulate_season::simulate_season, util::game::Game}
 use super::{run_all_experiments, run_config};
 
 /// Given an starting elo and matches, simulates the season and compares it to the real season and the real match results, returning the elo difference table
-/// TODO: include a flag to determine if we should use the real or simulated elo for the next season. Maybe create an enum? This is noted in the code as "NEXT OPTION"
 pub fn run_season_experiment(
     season_games: &Vec<Game>,
     starting_elo: &EloTable,
@@ -34,7 +33,7 @@ pub fn run_season_experiment(
     let elo_config = run_config.clone();
 
     let real_elo =
-        construct_elo_table_for_year(season_games, Some(starting_elo.clone()), Some(&elo_config));
+        construct_elo_table_for_year(season_games, Some(starting_elo.clone()), Some(&elo_config), experiment_config);
 
     let tabela_fake = LeagueTable::new(&simulated_matches, "Brasileirão", &1);
     let tabela = LeagueTable::new(season_games, "Brasileirão", &1);
@@ -67,8 +66,11 @@ fn compare_elo_tables(real_elo: &EloTable, simulated_elo: &EloTable) -> HashMap<
     let mut elo_diff: HashMap<String, f64> = HashMap::new();
 
     for (team, elo) in real_elo.iter() {
-        let simulated_elo = simulated_elo.get(team).unwrap();
-        let diff = elo.rating - simulated_elo.rating;
+        let simulated_elo = simulated_elo.get(team);
+        let diff = match simulated_elo {
+            Some(sim_elo) => elo.rating - sim_elo.rating,
+            None => {println!("A zero appeared! team: {:?}", &team ); 0.0},
+        };
         elo_diff.insert(team.clone(), diff);
     }
 
@@ -87,7 +89,11 @@ fn calculate_rmse(elo_diffs: &HashMap<String, f64>, season_match_count: Option<u
         sum += diff.powi(2);
     }
 
-    let mean = sum / n as f64;
+    if n == 0 {
+        panic!("n is 0");
+    }
+
+    let mean: f64 = sum / n as f64;
 
     mean.sqrt()
 }
