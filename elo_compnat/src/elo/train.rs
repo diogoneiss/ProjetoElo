@@ -4,7 +4,7 @@ use crate::util::game::Game;
 
 use super::util::season::{construct_seasons, get_seasons_in_season_map, SeasonMap};
 
-use super::super::{CustomRating, RunConfig, CustomElo};
+use super::super::{CustomElo, CustomRating, RunConfig};
 
 pub type RankedMatch = (CustomRating, skillratings::Outcomes);
 pub type EloTable = HashMap<String, CustomRating>;
@@ -21,7 +21,6 @@ pub fn construct_elo_table_for_year(
         Some(elos) => elos,
         None => HashMap::new(),
     };
-
 
     let default_config = RunConfig::default();
     let elo_config = match elo_config {
@@ -49,38 +48,32 @@ pub fn construct_elo_table_for_year(
         let away_team_elo = current_elo(&away_team);
 
         // Salvar histórico de resultados desses times e elos
-        let mut insert_result = |team_name: &String, current_elo: CustomRating, outcome| {
+        let mut insert_result = |team_name: &String, current_elo: &CustomRating, outcome| {
             results_table
                 .entry(team_name.clone())
                 .or_insert(Vec::new())
-                .push((current_elo, outcome));
+                .push((*current_elo, outcome));
         };
 
-        insert_result(&home_team, home_team_elo.clone(), home_outcome);
-        insert_result(&away_team, away_team_elo.clone(), away_outcome);
+        insert_result(&home_team, &home_team_elo, home_outcome);
+        insert_result(&away_team, &away_team_elo, away_outcome);
 
-        let custom_elo = CustomElo{config: elo_config.clone()};
+        let custom_elo = CustomElo {
+            config: elo_config.clone(),
+        };
 
-        let absolute_goal_diff: f64 = ((partida.home_score as i8) - (partida.away_score as i8)).abs().into();
-        let absolute_market_value_diff: f64 = 10.0; // preencher corrertamente conform tabela
+        let absolute_goal_diff: f64 = ((partida.home_score as i8) - (partida.away_score as i8))
+            .abs()
+            .into();
+        let absolute_market_value_diff: f64 = 0.05; // preencher corrertamente conform tabela
 
-        let (new_player_home, new_player_away) =
-            custom_elo.rate(&home_team_elo, &away_team_elo, partida.result, absolute_goal_diff, absolute_market_value_diff);
-
-        if DEBUG_INFO && (home_team == "Cruzeiro" || away_team == "Cruzeiro") {
-            println!("{:?}", partida);
-            if home_team == "Cruzeiro" {
-                println!(
-                    "Cruzeiro: elo: {} -> {}",
-                    home_team_elo.rating, new_player_home.rating
-                );
-            } else {
-                println!(
-                    "Cruzeiro: elo: {} -> {}",
-                    away_team_elo.rating, new_player_away.rating
-                );
-            }
-        }
+        let (new_player_home, new_player_away) = custom_elo.rate(
+            &home_team_elo,
+            &away_team_elo,
+            partida.result,
+            absolute_goal_diff,
+            absolute_market_value_diff,
+        );
 
         elo_table.insert(home_team, new_player_home);
         elo_table.insert(away_team, new_player_away);
