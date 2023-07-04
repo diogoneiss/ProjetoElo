@@ -8,6 +8,9 @@ edition = "2021"
 name = "elo_compnat"
 crate-type = ["cdylib", "rlib"]
 
+[profile.release]
+overflow-checks = true
+
 [dependencies]
 pyo3 = "0.19.0"
 clap = { version = "4.3.3", features = ["derive"] }
