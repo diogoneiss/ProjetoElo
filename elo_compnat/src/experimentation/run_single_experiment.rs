@@ -23,7 +23,7 @@ fn run_season_experiment(
     experiment_config: &run_config::RunHyperparameters,
     random_seed: u32,
 ) -> (f64, EloTable, EloTable) {
-    let (elo_simulated, simulated_matches) = simulate_season(
+    let (elo_simulated, simulated_matches, config_after_run) = simulate_season(
         season_games,
         starting_elo,
         run_config,
@@ -31,9 +31,7 @@ fn run_season_experiment(
         random_seed,
     );
 
-    let elo_config = EloConfig {
-        k: run_config.k_factor,
-    };
+    let elo_config = run_config.clone();
 
     let real_elo =
         construct_elo_table_for_year(season_games, Some(starting_elo.clone()), Some(&elo_config));

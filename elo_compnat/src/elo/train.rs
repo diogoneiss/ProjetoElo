@@ -1,27 +1,28 @@
-use skillratings::elo::{elo, EloConfig, EloRating};
-
 use std::collections::HashMap;
 
 use crate::util::game::Game;
 
 use super::util::season::{construct_seasons, get_seasons_in_season_map, SeasonMap};
 
-pub type RankedMatch = (EloRating, skillratings::Outcomes);
-pub type EloTable = HashMap<String, EloRating>;
+use super::super::{CustomElo, CustomRating, RunConfig};
+
+pub type RankedMatch = (CustomRating, skillratings::Outcomes);
+pub type EloTable = HashMap<String, CustomRating>;
 
 const DEBUG_INFO: bool = false;
 
 pub fn construct_elo_table_for_year(
     partidas: &Vec<Game>,
     starting_elos: Option<EloTable>,
-    elo_config: Option<&EloConfig>,
+    elo_config: Option<&RunConfig>,
 ) -> EloTable {
     // Construir tabela de elo se vier vazia
     let mut elo_table = match starting_elos {
         Some(elos) => elos,
         None => HashMap::new(),
     };
-    let default_config = EloConfig::default();
+
+    let default_config = RunConfig::default();
     let elo_config = match elo_config {
         Some(config) => config,
         None => &default_config,
@@ -40,40 +41,39 @@ pub fn construct_elo_table_for_year(
             elo_table
                 .get(team_name)
                 .cloned()
-                .unwrap_or_else(EloRating::new)
+                .unwrap_or_else(CustomRating::new)
         };
 
         let home_team_elo = current_elo(&home_team);
         let away_team_elo = current_elo(&away_team);
 
         // Salvar histórico de resultados desses times e elos
-        let mut insert_result = |team_name: &String, current_elo: EloRating, outcome| {
+        let mut insert_result = |team_name: &String, current_elo: &CustomRating, outcome| {
             results_table
                 .entry(team_name.clone())
                 .or_insert(Vec::new())
-                .push((current_elo, outcome));
+                .push((*current_elo, outcome));
         };
 
-        insert_result(&home_team, home_team_elo, home_outcome);
-        insert_result(&away_team, away_team_elo, away_outcome);
+        insert_result(&home_team, &home_team_elo, home_outcome);
+        insert_result(&away_team, &away_team_elo, away_outcome);
 
-        let (new_player_home, new_player_away) =
-            elo(&home_team_elo, &away_team_elo, &home_outcome, elo_config);
+        let custom_elo = CustomElo {
+            config: elo_config.clone(),
+        };
 
-        if DEBUG_INFO && (home_team == "Cruzeiro" || away_team == "Cruzeiro") {
-            println!("{:?}", partida);
-            if home_team == "Cruzeiro" {
-                println!(
-                    "Cruzeiro: elo: {} -> {}",
-                    home_team_elo.rating, new_player_home.rating
-                );
-            } else {
-                println!(
-                    "Cruzeiro: elo: {} -> {}",
-                    away_team_elo.rating, new_player_away.rating
-                );
-            }
-        }
+        let absolute_goal_diff: f64 = ((partida.home_score as i8) - (partida.away_score as i8))
+            .abs()
+            .into();
+        let absolute_market_value_diff: f64 = 0.05; // preencher corrertamente conform tabela
+
+        let (new_player_home, new_player_away) = custom_elo.rate(
+            &home_team_elo,
+            &away_team_elo,
+            partida.result,
+            absolute_goal_diff,
+            absolute_market_value_diff,
+        );
 
         elo_table.insert(home_team, new_player_home);
         elo_table.insert(away_team, new_player_away);
@@ -96,11 +96,11 @@ fn check_time_series_interval(
 
 pub fn construct_elo_table_for_time_series(
     all_matches: &[Game],
-    elo_config: Option<&EloConfig>,
+    elo_config: Option<&RunConfig>,
     start_year: u16,
     end_year: u16,
 ) -> EloTable {
-    let default_config = EloConfig::default();
+    let default_config = RunConfig::default();
     let elo_config = match elo_config {
         Some(config) => config,
         None => &default_config,
@@ -116,7 +116,6 @@ pub fn construct_elo_table_for_time_series(
     check_time_series_interval(&years_in_season_map, &desired_range);
 
     let mut starting_elo_table: Option<EloTable> = None;
-
     for year in desired_range.into_iter() {
         let season = seasons_map.get(&year).unwrap();
         let partidas = &season.matches;

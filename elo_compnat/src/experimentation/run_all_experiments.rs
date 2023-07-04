@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use skillratings::elo::EloConfig;
-
 use crate::elo::{
     train::{
         construct_elo_table_for_time_series, construct_elo_table_for_year, print_elo_table,
@@ -22,17 +20,14 @@ pub fn run_experiments(
     experiment_config: &run_config::RunHyperparameters,
 ) -> Vec<f64> {
     // Setup: Configure the required structs
-    let elo_config = EloConfig {
-        k: run_config.k_factor,
-    };
-
+    let elo_config = run_config.clone();
     // Pre processing: split the games into seasons, determine start and end years of backtesting
     let end_year = experiment_config.starting_year + experiment_config.backtest_years;
 
     let seasons_map = season::construct_seasons(all_games);
 
     // 1st stage: do the elo training with the desired years of data. this is the backtesting
-    let mut elo_table_at_start = construct_elo_table_for_time_series(
+    let elo_table_at_start = construct_elo_table_for_time_series(
         all_games,
         Some(&elo_config),
         experiment_config.starting_year,
@@ -130,7 +125,7 @@ fn run_season_experiment(
     experiment_config: &run_config::RunHyperparameters,
     random_seed: u32,
 ) -> (f64, EloTable, EloTable) {
-    let (elo_simulated, simulated_matches) = simulate_season(
+    let (elo_simulated, simulated_matches, config_after_run) = simulate_season(
         season_games,
         starting_elo,
         run_config,
@@ -138,10 +133,7 @@ fn run_season_experiment(
         random_seed,
     );
 
-    let elo_config = EloConfig {
-        k: run_config.k_factor,
-    };
-
+    let elo_config = run_config.clone();
     let real_elo =
         construct_elo_table_for_year(season_games, Some(starting_elo.clone()), Some(&elo_config));
 

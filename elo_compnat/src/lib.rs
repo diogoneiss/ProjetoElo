@@ -7,9 +7,9 @@ mod util;
 use elo::train::construct_elo_table_for_time_series;
 use elo::util::league::LeagueTable;
 
-use experimentation::{run_all_experiments::run_experiments, run_config::CustomRating};
 use experimentation::run_config::{self, CustomElo};
-use std;
+use experimentation::{run_all_experiments::run_experiments, run_config::CustomRating};
+
 use util::game::Game;
 
 //TODO: extrair essas duas structs para arquivos separados
@@ -89,16 +89,23 @@ pub fn get_data(py: Python) -> PyResult<PyObject> {
 }
 
 #[pyfunction]
-/// Wrapper for the run_experiments function, so that it can be called from python and the 
+/// Wrapper for the run_experiments function, so that it can be called from python and the
 /// data parsed
-/// 
-pub fn fitness_function(py: Python, partidas_py: PyObject, run_config_py:PyObject,  hyperparameters_py: PyObject) -> PyResult<Vec<f64>> {
-
+///
+pub fn fitness_function(
+    py: Python,
+    partidas_py: PyObject,
+    run_config_py: PyObject,
+    hyperparameters_py: PyObject,
+) -> PyResult<Vec<f64>> {
     let partidas: Vec<Game> = partidas_py.extract(py)?;
     let run_config: RunConfig = run_config_py.extract(py)?;
     let hyperparameters: RunHyperparameters = hyperparameters_py.extract(py)?;
 
-    println!("Running experiments with hyperparameters: {:?}", &hyperparameters);
+    println!(
+        "Running experiments with hyperparameters: {:?}",
+        &hyperparameters
+    );
     println!("Genotypes for this run: {:?}", &run_config);
     println!("1a partida: {:?}", partidas[0]);
 
@@ -108,7 +115,6 @@ pub fn fitness_function(py: Python, partidas_py: PyObject, run_config_py:PyObjec
     // aqui sairia o erro
     Ok(errors)
 }
-
 
 /// This is the python module definition, everything that you want to use
 /// inside python must be declared here
@@ -122,7 +128,6 @@ fn elo_compnat(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<RunConfig>()?;
     m.add_class::<CustomElo>()?;
     m.add_class::<CustomRating>()?;
-
 
     Ok(())
 }
