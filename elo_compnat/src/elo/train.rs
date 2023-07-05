@@ -87,6 +87,7 @@ pub fn construct_elo_table_for_year(
             partida.result,
             absolute_goal_diff,
             absolute_market_value_diff,
+            partida.division as usize
         );
 
         elo_table.insert(home_team, new_player_home);

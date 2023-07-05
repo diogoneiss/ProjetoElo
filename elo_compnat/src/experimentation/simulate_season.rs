@@ -99,6 +99,7 @@ pub fn simulate_season(
             simulated_game.result,
             absolute_goal_diff,
             absolute_market_value_diff,
+            game.division as usize
         );
 
         let home_diff = new_player_home.rating - home_elo.rating;

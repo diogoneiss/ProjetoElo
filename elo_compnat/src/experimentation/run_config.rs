@@ -338,6 +338,7 @@ impl CustomElo {
         outcome: GameResult,
         absolute_goal_diff: f64,
         absolute_market_value_diff: f64,
+        division: usize
     ) -> (CustomRating, CustomRating) {
         let RunConfig {
             k_factor,
@@ -363,7 +364,7 @@ impl CustomElo {
         };
 
         let change_p1 = k_factor
-            * w_division[0]
+            * w_division[division - 1]
             * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
             * ((1.0 + normalizazed_goal_diff).powf(gamma))
             * (real_player_one_score - one_expected);
@@ -379,7 +380,7 @@ impl CustomElo {
         }
 
         let change_p2 = k_factor
-            * w_division[0]
+            * w_division[division - 1]
             * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
             * ((1.0 + normalizazed_goal_diff).powf(gamma))
             * (real_player_two_score - two_expected);
