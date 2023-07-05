@@ -1,5 +1,4 @@
 use pyo3::prelude::*;
-use pyo3::types::IntoPyDict;
 use serde::{Deserialize, Serialize};
 use skillratings::Outcomes;
 
@@ -11,6 +10,7 @@ pub enum GameResult {
     D,
 }
 
+// TODO: adicionar as colunas de home_elo e away_elo no csv, com valor 0
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[pyclass]
 pub struct Game {
@@ -27,6 +27,8 @@ pub struct Game {
     pub result: GameResult,
     #[serde(rename = "Season")]
     pub year: u16,
+    pub home_elo: Option<f64>,
+    pub away_elo: Option<f64>,
 }
 
 impl Game {
@@ -50,6 +52,8 @@ impl Game {
         away_score: u16,
         result: GameResult,
         year: u16,
+        home_elo: Option<f64>,
+        away_elo: Option<f64>
     ) -> Game {
         Game {
             id,
@@ -59,6 +63,8 @@ impl Game {
             away_score,
             result,
             year,
+            home_elo,
+            away_elo
         }
     }
 }

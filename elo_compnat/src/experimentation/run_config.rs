@@ -394,15 +394,13 @@ pub fn expected_score(
     player_two: &CustomRating,
     config: &RunConfig,
 ) -> (f64, f64, f64) {
+
     let RunConfig {
-        k_factor,
-        gamma,
         home_advantage,
-        home_field_advantage_weight,
-        market_value_weight,
         tie_frequency,
-        w_division,
+        ..
     } = config.clone();
+
     let basis: f64 = 10.0;
     let exponent = (player_two.rating - player_one.rating - home_advantage) / 400.0;
     let denominator = basis.powf(exponent) + basis.powf(-1.0 * exponent) + tie_frequency;

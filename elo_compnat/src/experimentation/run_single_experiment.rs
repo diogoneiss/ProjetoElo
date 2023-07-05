@@ -1,18 +1,18 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use skillratings::elo::EloConfig;
 
-use crate::elo::{
+use crate::{elo::{
     train::{
-        construct_elo_table_for_time_series, construct_elo_table_for_year, print_elo_table,
+        construct_elo_table_for_year,
         EloTable,
     },
     util::{league::LeagueTable, season},
-};
+}, util::math::calculate_rmse};
 
 use crate::{experimentation::simulate_season::simulate_season, util::game::Game};
 
-use super::{run_all_experiments, run_config};
+use super::{run_config::{self, RunConfig}};
 
 /// Given an starting elo and matches, simulates the season and compares it to the real season and the real match results, returning the elo difference table
 pub fn run_season_experiment(
@@ -21,7 +21,7 @@ pub fn run_season_experiment(
     run_config: &run_config::RunConfig,
     experiment_config: &run_config::RunHyperparameters,
     random_seed: u32,
-) -> (f64, EloTable, EloTable) {
+) -> (f64, EloTable, EloTable, RunConfig) {
     let (elo_simulated, simulated_matches, config_after_run) = simulate_season(
         season_games,
         starting_elo,
@@ -30,13 +30,14 @@ pub fn run_season_experiment(
         random_seed,
     );
 
-    let elo_config = run_config.clone();
+    let elo_config = config_after_run.clone();
 
+    //TODO: retornar as novas partidas nessa função para usar no python, mas nao vai ser pra usar aqui
     let real_elo =
         construct_elo_table_for_year(season_games, Some(starting_elo.clone()), Some(&elo_config), experiment_config);
 
-    let tabela_fake = LeagueTable::new(&simulated_matches, "Brasileirão", &1);
-    let tabela = LeagueTable::new(season_games, "Brasileirão", &1);
+    //let tabela_fake = LeagueTable::new(&simulated_matches, "Brasileirão", &1);
+    //let tabela = LeagueTable::new(season_games, "Brasileirão", &1);
 
     // uncomment this to see the ending table
     //tabela.print_final_table();
@@ -52,14 +53,14 @@ pub fn run_season_experiment(
             println!("{}: {}", team, diff);
         }
     */
-    let games_count = changed_elos(starting_elo, &elo_simulated);
-
+    //let games_count = changed_elos(starting_elo, &elo_simulated);
+    let games_count = count_unique_teams(&season_games);
     let rmse_correct_mean = calculate_rmse(&elo_diff, Some(games_count));
 
     //println!("RMSE with games: {}", rmse_correct_mean);
     //println!("RMSE: {}", rmse_all_teams);
 
-    (rmse_correct_mean, elo_simulated, real_elo)
+    (rmse_correct_mean, elo_simulated, real_elo, config_after_run)
 }
 
 fn compare_elo_tables(real_elo: &EloTable, simulated_elo: &EloTable) -> HashMap<String, f64> {
@@ -77,27 +78,18 @@ fn compare_elo_tables(real_elo: &EloTable, simulated_elo: &EloTable) -> HashMap<
     elo_diff
 }
 
-fn calculate_rmse(elo_diffs: &HashMap<String, f64>, season_match_count: Option<u32>) -> f64 {
-    let mut sum = 0.0;
+fn count_unique_teams(games: &[Game]) -> u32 {
+    let mut unique_teams = HashSet::new();
 
-    let n = match season_match_count {
-        Some(n) => n,
-        None => elo_diffs.len() as u32,
-    };
-
-    for (_, diff) in elo_diffs.iter() {
-        sum += diff.powi(2);
+    for game in games.iter() {
+        let name = game.home.as_str();
+        unique_teams.insert(name);
     }
 
-    if n == 0 {
-        panic!("n is 0");
-    }
-
-    let mean: f64 = sum / n as f64;
-
-    mean.sqrt()
+    unique_teams.len() as u32
 }
 
+/// Kept for legacy reasons, this function is not used anymore
 fn changed_elos(elo_table: &EloTable, elo_table_after_season: &EloTable) -> u32 {
     let mut changed_elos: u32 = 0;
 
