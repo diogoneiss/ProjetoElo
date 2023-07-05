@@ -28,48 +28,53 @@ genotype_list = [40, 1, 1, 0.0075, 1, 0.5, 0.5, *w_division]
 
 run_config_obj = RunConfig.from_list(genotype_list)
 
-posicao_parametros_runconfig = {'k_factor': 0,
-                                'gamma': 1,
-                                'home_advantage': 2,
-                                'home_field_advantage_weight': 3,
-                                'market_value_weight': 4,
-                                'tie_frequency': 5,
-                                'w_division': 6}
+posicao_parametros_runconfig = {
+    "k_factor": 0,
+    "gamma": 1,
+    "home_advantage": 2,
+    "home_field_advantage_weight": 3,
+    "market_value_weight": 4,
+    "tie_frequency": 5,
+    "w_division": 6,
+}
 
 # https://pygad.readthedocs.io/en/latest/pygad.html#more-about-the-gene-space-parameter
 
-k_factor = {'low': 10,
-            'high': 60,
-            "step": 1.0
-            }
+k_factor = {"low": 10, "high": 60, "step": 1.0}
 
-gamma = {'low': 0.3, 'high': 2}
-home_advantage = {'low': 0, 'high': 2}
-home_field_advantage_weight = {'low': 0, 'high': 1}
-market_value_weight = {'low': 0, 'high': 1}
-tie_frequency = {'low': 0, 'high': 1}
+gamma = {"low": 0.3, "high": 2}
+home_advantage = {"low": 0, "high": 2}
+home_field_advantage_weight = {"low": 0, "high": 1}
+market_value_weight = {"low": 0, "high": 1}
+tie_frequency = {"low": 0, "high": 1}
 
-w_division = [{'low': 10, 'high': 80}, {'low': 10, 'high': 80}]
+w_division = [{"low": 10, "high": 80}, {"low": 10, "high": 80}]
 
 # todo: fazer o gene space ser um dict com os parametros e os valores
-gene_space = [k_factor, gamma, home_advantage, home_field_advantage_weight,
-              market_value_weight, tie_frequency, w_division[0], w_division[1]]
+gene_space = [
+    k_factor,
+    gamma,
+    home_advantage,
+    home_field_advantage_weight,
+    market_value_weight,
+    tie_frequency,
+    w_division[0],
+    w_division[1],
+]
 
 
-err = elo_compnat.fitness_function(
-    partidas, run_config_obj, hiperparametros_obj)
+err = elo_compnat.fitness_function(partidas, run_config_obj, hiperparametros_obj)
 
-experiment_start_year = hyperparams_list[1]+hyperparams_list[2]
+experiment_start_year = hyperparams_list[1] + hyperparams_list[2]
 plot = False
 
 if plot:
-    x = np.arange(experiment_start_year, experiment_start_year+len(err), 1)
+    x = np.arange(experiment_start_year, experiment_start_year + len(err), 1)
 
     plt.plot(x, err)
     plt.title("Erros do modelo")
     plt.xlabel(f"Temporada simulada")
     plt.show()
-
 
 
 # usaremos isso aqui pra salvar em nuvem os resultados
