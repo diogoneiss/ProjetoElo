@@ -2,6 +2,7 @@ use crate::{elo::{
     train::{
         construct_elo_table_for_time_series,
         EloTable,
+        print_elo_table
     },
     util::{season},
 }, util::math::{mean, transpose_matrix}};
@@ -60,36 +61,6 @@ pub fn run_experiments(
 
             let season = seasons_map.get(&s_year).unwrap();
             let season_games = &season.matches;
-            /*
-            OUTPUT / elo comparison decisions
-            2 options on how to measure the error between expected and simulated elo
-
-            1. ORACLE: Use previous loop simulated elo and apply correct data from the current loop. We will take the t-1 table and apply the respective t real match results, implying that the
-            elos were perfectly predicted, but using the elo values generated from previous simulations. Note that this will be used *only* for the error calculation, this elo table
-            will be discarded after the error is calculated, such that the correct match results are used only in desired eval season, the other ones are simulated.
-            This works as a oracle, which would be capable of predicting the results perfectly, even with bad elo values. Minimizing the error in this case would be equivalent to correctly
-            estimating the elo values.
-
-
-            2. REAL: Real elo table from t-1 period, updated with t period match results.
-
-            Currently we are using option 2, but we should test both. this will require a refactor of the individual experiment function
-            */
-
-            /* INPUT decisions
-
-            How to deal with "starting elo"
-            2 options on how to feed the "simulated" elo table
-
-            1. PROPAGATED: Use previous loop simulated elo. Feed as the starting elo for the next loop. Will require some sort of exponential moving average to deal with the propagation
-            Conceptually is the best approach.
-            2. SYNTHETIC: Take the real elo table from time t-1 as input, meaning we recreate this simulated table for every experiment based on real data,
-            such that elo errors do not propagate between different seasons
-
-            Currently we are using option 2, but we should test both. This will require a code refactor to deal with the update and refeeding.
-            */
-
-            // use elo table as the starting elo for the next season, using it to measure the error as well.
             let (rmse, _, real_elo, season_config) = super::run_single_experiment::run_season_experiment(
                 season_games,
                 &elo_table,
@@ -98,20 +69,16 @@ pub fn run_experiments(
                 i as u32,
             );
 
-            // save the season config for the next iteration, with the updated weigths
             last_season_config = season_config;
             tie_frequency.push(last_season_config.tie_frequency);
-            // Update the elo tables for the next iteration
-            // As we are using option 2, we will use the real elo table for the next season, so it needs to be updated.
+
             elo_table = real_elo;
 
             errors_per_season.push(rmse);
-
         }
-        // Save the errors for this experiment in the vector, we will later calculate the mean for this experiment
         errors_for_each_run.push(errors_per_season);
         draw_frequency.push(tie_frequency);
-
+        print_elo_table(&elo_table, true);
     }
 
     println!("Finished experiments");
@@ -120,7 +87,7 @@ pub fn run_experiments(
         println!("Draw frequency for experiment {}: {:?}", i, draw_frequency[i]);
     }
 
-    //print_elo_table(&elo_table, true);
+
     // Tivemos que escolher estratégia de "seleção" do valor representativo da run. Será o melhor valor? O mediano? o médio?
     // interessante plottarmos isso pra estudar no python. Acabamos optando por usar o valor médio
 

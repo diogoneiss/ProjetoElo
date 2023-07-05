@@ -417,9 +417,11 @@ pub fn expected_score(
         ..
     } = config.clone();
 
+    let kappa: f64 = 2.0 * tie_frequency / (1.0 - tie_frequency);
+
     let basis: f64 = 10.0;
-    let exponent = (player_two.rating - player_one.rating - home_advantage) / 400.0;
-    let denominator = basis.powf(exponent) + basis.powf(-1.0 * exponent) + tie_frequency;
+    let exponent = (player_one.rating + home_advantage - player_two.rating) / 400.0;
+    let denominator = basis.powf(exponent) + basis.powf(-1.0 * exponent) + kappa;
 
     if denominator.is_infinite() {
         if denominator.is_sign_positive() {
