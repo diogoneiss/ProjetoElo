@@ -18,7 +18,7 @@ pub struct Game {
     #[serde(rename = "Week")]
     pub week: u32,
     #[serde(rename = "Date")]
-    pub date: &'static str,
+    pub date: String,
     #[serde(rename = "HomeTeam")]
     pub home: String,
     #[serde(rename = "AwayTeam")]
@@ -33,9 +33,9 @@ pub struct Game {
     pub year: u16,
     #[serde(rename = "Divisao")]
     pub division: u8,
-    #[serde(rename = "HomeTeam_value_norm_2")]
+    #[serde(rename = "HomeTeam_value_norm2")]
     pub home_value: f64,
-    #[serde(rename = "AwayTeam_value_norm_2")]
+    #[serde(rename = "AwayTeam_value_norm2")]
     pub away_value: f64,
     pub home_elo: Option<f64>,
     pub away_elo: Option<f64>,
@@ -56,23 +56,33 @@ impl Game {
     #[new]
     fn new(
         id: u64,
+        week: u32,
+        date: String,
         home: String,
         away: String,
         home_score: u16,
         away_score: u16,
         result: GameResult,
         year: u16,
+        division: u8,
+        home_value: f64,
+        away_value: f64,
         home_elo: Option<f64>,
         away_elo: Option<f64>
     ) -> Game {
         Game {
             id,
+            week,
+            date,
             home,
             away,
             home_score,
             away_score,
             result,
             year,
+            division,
+            home_value,
+            away_value,
             home_elo,
             away_elo
         }
