@@ -37,13 +37,13 @@ impl Eq for RunConfig {}
 impl Default for RunConfig {
     fn default() -> Self {
         RunConfig {
-            k_factor: 20.0,
+            k_factor: 1.0,
             gamma: 1.0,
             home_advantage: 10.0,
             home_field_advantage_weight: 0.075,
             market_value_weight: 1.0,
             tie_frequency: 0.5,
-            w_division: vec![1.0],
+            w_division: vec![1.0, 1.0],
         }
     }
 }
@@ -378,6 +378,7 @@ impl CustomElo {
         if player_two_new_rate.is_infinite() {
             player_two_new_rate = if player_two_new_rate.is_sign_positive() { f64::MAX } else { f64::MIN };
         }
+        /* println!("{} {}", player_one_new_rate, player_two_new_rate); */
         (
             CustomRating {
                 rating: player_one_new_rate,
@@ -404,7 +405,7 @@ pub fn expected_score(
     let basis: f64 = 10.0;
     let exponent = (player_two.rating - player_one.rating - home_advantage) / 400.0;
     let denominator = basis.powf(exponent) + basis.powf(-1.0 * exponent) + tie_frequency;
-    // check if denominator is infinite
+
     if denominator.is_infinite() {
         if denominator.is_sign_positive() {
             return (0.0, 0.0, 1.0);
@@ -417,6 +418,5 @@ pub fn expected_score(
     let exp_one = basis.powf(exponent) / denominator;
     let exp_two = basis.powf(-1.0 * exponent) / denominator;
     let exp_tie = 1.0 - exp_one - exp_two;
-    println!("{} {} {}\n------------------", exp_tie, exp_one, exp_two);
     (exp_tie, exp_one, exp_two)
 }

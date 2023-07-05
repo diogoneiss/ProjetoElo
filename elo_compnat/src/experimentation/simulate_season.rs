@@ -77,7 +77,7 @@ pub fn simulate_season(
             _ => GameResult::D,
         };
 
-        match game.result {
+        match simulated_game.result {
             GameResult::D => acc_tie_count += 1.0,
             _ => (),
         };

@@ -4,12 +4,10 @@ use std::error::Error;
 pub fn load_csv(path: &str) -> Result<Vec<Game>, Box<dyn Error>> {
 
     let mut reader = csv::Reader::from_path(path)?;
-    println!("before");
     let result: Vec<Game> = reader
         .deserialize()
         .map(|r: Result<Game, csv::Error>| r.unwrap())
         .collect();
-    println!("after");
     Ok(result)
 }
 

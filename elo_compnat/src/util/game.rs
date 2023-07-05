@@ -14,9 +14,8 @@ pub enum GameResult {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[pyclass]
 pub struct Game {
-    pub id: u64,
     #[serde(rename = "Week")]
-    pub week: u32,
+    pub week: f32,
     #[serde(rename = "Date")]
     pub date: String,
     #[serde(rename = "HomeTeam")]
@@ -55,8 +54,7 @@ impl Game {
 impl Game {
     #[new]
     fn new(
-        id: u64,
-        week: u32,
+        week: f32,
         date: String,
         home: String,
         away: String,
@@ -71,7 +69,6 @@ impl Game {
         away_elo: Option<f64>
     ) -> Game {
         Game {
-            id,
             week,
             date,
             home,
