@@ -8,6 +8,10 @@ import pyswarms.backend.topology as topologies
 import time
 from pyswarms.utils.plotters import (plot_cost_history, plot_contour, plot_surface)
 
+CORES = None
+
+
+
 # TODO: mover pro rust e só passar o caminho do arquivo
 partidas = elo_compnat.get_data()
 RunHyperparameters = elo_compnat.RunHyperparameters
@@ -66,7 +70,7 @@ def swarm_fitness_function(x_list_of_lists):
         start = time.perf_counter()
         err = elo_compnat.fitness_function(
             partidas, run_config_obj, hiperparametros_obj)
-        fitness = np.sum((err)
+        fitness = np.sum(err)
         #print("Fitness function time: ", time.perf_counter() - start, " for solution ", idx, " with fitness ", fitness)
         # Append the fitness to the aggregated list
         aggregated_fitness[idx] = fitness
@@ -231,7 +235,7 @@ def main():
     optimizer = ps.single.GlobalBestPSO(n_particles=10, dimensions=dimensions,
                                               options=options)
 
-    cost, pos = optimizer.optimize(swarm_fitness_function,  n_processes=5, iters=10)
+    cost, pos = optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=10)
 
     plot_cost_history(cost_history=optimizer.cost_history)
     plt.show()
