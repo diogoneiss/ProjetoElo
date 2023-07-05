@@ -1,4 +1,4 @@
-use crate::util::game::{Game, GameResult};
+use crate::util::game::{GameResult};
 use pyo3::exceptions::PyValueError;
 use pyo3::{prelude::*, types::PyDict};
 use serde::{Deserialize, Serialize};
