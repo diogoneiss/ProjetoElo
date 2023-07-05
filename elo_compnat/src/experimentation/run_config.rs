@@ -435,5 +435,16 @@ pub fn expected_score(
     let exp_one = basis.powf(exponent) / denominator;
     let exp_two = basis.powf(-1.0 * exponent) / denominator;
     let exp_tie = 1.0 - exp_one - exp_two;
-    (exp_tie, exp_one, exp_two)
+
+    let sum = exp_one + exp_two + exp_tie;
+    let zero = (1.0 - sum).abs();
+
+    let probs = (exp_tie, exp_one, exp_two);
+
+    let err_msg = format!("Probabilities should sum to one, they are {exp_tie} {exp_one} {exp_two}");
+
+    assert!(zero < f64::EPSILON, "{}", err_msg);
+
+    probs
+
 }

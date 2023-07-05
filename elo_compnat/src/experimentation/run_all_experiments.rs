@@ -78,7 +78,9 @@ pub fn run_experiments(
         }
         errors_for_each_run.push(errors_per_season);
         draw_frequency.push(tie_frequency);
+
     }
+
 
     let season_errors = transpose_matrix(errors_for_each_run);
 

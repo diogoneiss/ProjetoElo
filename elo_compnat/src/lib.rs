@@ -66,7 +66,9 @@ pub fn get_data(py: Python) -> PyResult<PyObject> {
 
     println!("Current directory: {}", &curr_directory);
 
-    let mut path = String::from("data/alemanha.csv");
+
+    let mut path = String::from("data/brasileirao.csv");
+
 
     // "ProjetoElo" is the last directory in the current_dir path prefix it to path
     // TODO: melhorar esse crime. Se chamamos dentro de elo_compnat, não precisa do prefixo
@@ -103,16 +105,12 @@ pub fn fitness_function(
     let run_config: RunConfig = run_config_py.extract(py)?;
     let hyperparameters: RunHyperparameters = hyperparameters_py.extract(py)?;
 
-    println!(
-        "Running experiments with hyperparameters: {:?}",
-        &hyperparameters
-    );
-    println!("Genotypes for this run: {:?}", &run_config);
+    //println!("Genotypes for this run: {:?}", &run_config);
     //println!("1a partida: {:?}", partidas[0]);
 
     let errors = run_experiments(&partidas, &run_config, &hyperparameters);
 
-    println!("Errors: {:?}", &errors);
+    //println!("Errors: {:?}", &errors);
     // aqui sairia o erro
     Ok(errors)
 }

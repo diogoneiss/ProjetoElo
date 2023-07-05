@@ -13,6 +13,7 @@ fn main() {
         market_value_weight: 1.2,
         tie_frequency: 0.30,
         w_division: vec![1.2, 1.05],
+
     };
     elo_compnat::run(param, Some(&test_config));
 }
