@@ -368,7 +368,7 @@ impl CustomElo {
             player_one_new_rate = if player_one_new_rate.is_sign_positive() { f64::MAX } else { f64::MIN };
         }
 
-        let change_p2 =  k_factor
+        let change_p2 = k_factor
                 * w_division[0]
                 * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
                 * ((1.0 + absolute_goal_diff).powf(gamma))
@@ -417,5 +417,6 @@ pub fn expected_score(
     let exp_one = basis.powf(exponent) / denominator;
     let exp_two = basis.powf(-1.0 * exponent) / denominator;
     let exp_tie = 1.0 - exp_one - exp_two;
+    println!("{} {} {}\n------------------", exp_tie, exp_one, exp_two);
     (exp_tie, exp_one, exp_two)
 }

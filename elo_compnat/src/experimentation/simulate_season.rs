@@ -55,7 +55,6 @@ pub fn simulate_season(
         // calculate expected scores
         let (exp_tie, exp_home, _) = expected_score(&home_elo, &away_elo, run_config);
 
-        //generate two random numbers between 0 and 1, determine the winner (or draw) and update the elos
         let random_result: f64 = rng.gen();
 
         let tie = random_result < exp_tie;
