@@ -342,13 +342,11 @@ impl CustomElo {
         let RunConfig {
             k_factor,
             gamma,
-            home_advantage,
-            home_field_advantage_weight,
             market_value_weight,
-            tie_frequency,
             w_division,
+            ..
         } = self.config.clone();
-        let (tie_expected, one_expected, two_expected) =
+        let (_, one_expected, two_expected) =
             expected_score(player_one, player_two, &self.config);
         let real_player_one_score: f64 = match outcome {
             GameResult::H => 1.0,
