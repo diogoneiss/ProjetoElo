@@ -28,7 +28,7 @@ pub fn run(parameters: RunHyperparameters, config: Option<&RunConfig>) -> PyResu
     let mut path = String::from("data/brasileirao.csv");
 
     // "ProjetoElo" is the last directory in the current_dir path prefix it to path
-    if curr_directory.ends_with("ProjetoElo") {
+    if curr_directory.ends_with("lo") {
         println!("Current directory ends with ProjetoElo");
         let path2 = String::from("elo_compnat/");
         path = path2 + &path;
@@ -47,7 +47,6 @@ pub fn run(parameters: RunHyperparameters, config: Option<&RunConfig>) -> PyResu
         None => run_config::RunConfig::default(),
     };
 
-    
     let errors = run_experiments(&partidas, &run_config, &parameters);
 
     parameters.print_errors_by_year(&errors);

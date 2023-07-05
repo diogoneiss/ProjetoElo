@@ -356,25 +356,35 @@ impl CustomElo {
         let real_player_two_score: f64 = 1.0 - real_player_one_score;
 
         let change_p1 = k_factor
-                * w_division[0]
-                * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
-                * ((1.0 + absolute_goal_diff).powf(gamma))
-                * (real_player_one_score - one_expected);
+            * w_division[0]
+            * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
+            * ((1.0 + absolute_goal_diff).powf(gamma))
+            * (real_player_one_score - one_expected)
+            / 100.0;
 
         let mut player_one_new_rate: f64 = player_one.rating + change_p1;
         if player_one_new_rate.is_infinite() {
-            player_one_new_rate = if player_one_new_rate.is_sign_positive() { f64::MAX } else { f64::MIN };
+            player_one_new_rate = if player_one_new_rate.is_sign_positive() {
+                f64::MAX
+            } else {
+                f64::MIN
+            };
         }
 
         let change_p2 = k_factor
-                * w_division[0]
-                * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
-                * ((1.0 + absolute_goal_diff).powf(gamma))
-                * (real_player_two_score - two_expected);
+            * w_division[0]
+            * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
+            * ((1.0 + absolute_goal_diff).powf(gamma))
+            * (real_player_two_score - two_expected)
+            / 100.0; // Confia
         let mut player_two_new_rate: f64 = player_two.rating + change_p2;
 
         if player_two_new_rate.is_infinite() {
-            player_two_new_rate = if player_two_new_rate.is_sign_positive() { f64::MAX } else { f64::MIN };
+            player_two_new_rate = if player_two_new_rate.is_sign_positive() {
+                f64::MAX
+            } else {
+                f64::MIN
+            };
         }
         /* println!("{} {}", player_one_new_rate, player_two_new_rate); */
         (
@@ -393,7 +403,6 @@ pub fn expected_score(
     player_two: &CustomRating,
     config: &RunConfig,
 ) -> (f64, f64, f64) {
-
     let RunConfig {
         home_advantage,
         tie_frequency,
