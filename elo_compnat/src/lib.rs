@@ -25,7 +25,7 @@ pub fn run(parameters: RunHyperparameters, config: Option<&RunConfig>) -> PyResu
 
     println!("Current directory: {}", &curr_directory);
 
-    let mut path = String::from("data/brasileirao.csv");
+    let mut path = String::from("data/italia.csv");
 
     // "ProjetoElo" is the last directory in the current_dir path prefix it to path
     if curr_directory.ends_with("lo") {
@@ -66,7 +66,9 @@ pub fn get_data(py: Python) -> PyResult<PyObject> {
 
     println!("Current directory: {}", &curr_directory);
 
+
     let mut path = String::from("data/brasileirao.csv");
+
 
     // "ProjetoElo" is the last directory in the current_dir path prefix it to path
     // TODO: melhorar esse crime. Se chamamos dentro de elo_compnat, não precisa do prefixo

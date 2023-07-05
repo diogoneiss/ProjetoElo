@@ -79,7 +79,9 @@ pub fn construct_elo_table_for_year(
         let absolute_goal_diff: f64 = ((partida.home_score as i16) - (partida.away_score as i16))
             .abs()
             .into();
-        let absolute_market_value_diff: f64 = 0.05; // preencher corrertamente conform tabela
+
+        let absolute_market_value_diff: f64 = (partida.home_value - partida.away_value)
+        .abs();
 
         let (new_player_home, new_player_away) = custom_elo.rate(
             &home_team_elo,
@@ -87,6 +89,7 @@ pub fn construct_elo_table_for_year(
             partida.result,
             absolute_goal_diff,
             absolute_market_value_diff,
+            partida.division as usize
         );
 
         elo_table.insert(home_team, new_player_home);

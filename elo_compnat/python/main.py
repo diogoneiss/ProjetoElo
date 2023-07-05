@@ -52,10 +52,12 @@ def swarm_fitness_function(x_list_of_lists):
 
     for idx, x in enumerate(x_list_of_lists):
 
+
         # we have a x vector of dimension n, and need to create a config_list of size n+1, such that the 5th element is hard coded as 0.28
         position = 5
         # Create a config_list of size n+1
         config_list = x[:position].tolist() + [0.28] + x[position:].tolist()
+
 
 
         run_config_obj = RunConfig.from_list(config_list)
@@ -79,6 +81,7 @@ def run_genetic_algo():
 
     run_config_obj = RunConfig.from_list(genotype_list)
 
+
     posicao_parametros_runconfig = {'k_factor': 0,
                                     'gamma': 1,
                                     'home_advantage': 2,
@@ -94,10 +97,12 @@ def run_genetic_algo():
                 "step": 1.0
                 }
 
+
     
 
     err = elo_compnat.fitness_function(
         partidas, run_config_obj, hiperparametros_obj)
+
 
     experiment_start_year = hyperparams_list[1]+hyperparams_list[2]
     plot = False
