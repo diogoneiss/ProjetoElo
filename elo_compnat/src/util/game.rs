@@ -15,18 +15,28 @@ pub enum GameResult {
 #[pyclass]
 pub struct Game {
     pub id: u64,
+    #[serde(rename = "Week")]
+    pub week: u32,
+    #[serde(rename = "Date")]
+    pub date: &'static str,
     #[serde(rename = "HomeTeam")]
     pub home: String,
     #[serde(rename = "AwayTeam")]
     pub away: String,
-    #[serde(rename = "FTHG")]
+    #[serde(rename = "HomeGoals")]
     pub home_score: u16,
-    #[serde(rename = "FTAG")]
+    #[serde(rename = "AwayGoals")]
     pub away_score: u16,
-    #[serde(rename = "FTR")]
+    #[serde(rename = "Result")]
     pub result: GameResult,
     #[serde(rename = "Season")]
     pub year: u16,
+    #[serde(rename = "Divisao")]
+    pub division: u8,
+    #[serde(rename = "HomeTeam_value_norm_2")]
+    pub home_value: f64,
+    #[serde(rename = "AwayTeam_value_norm_2")]
+    pub away_value: f64,
     pub home_elo: Option<f64>,
     pub away_elo: Option<f64>,
 }
