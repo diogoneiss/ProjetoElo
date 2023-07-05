@@ -6,9 +6,6 @@ mod elo;
 pub mod experimentation;
 mod util;
 
-use elo::train::construct_elo_table_for_time_series;
-use elo::util::league::LeagueTable;
-
 use experimentation::run_config::{self, CustomElo};
 use experimentation::{run_all_experiments::run_experiments, run_config::CustomRating};
 

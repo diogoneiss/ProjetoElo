@@ -34,7 +34,7 @@ pub fn simulate_season(
         let away = game.away.clone();
 
         let liga = 1; // TODO: extrair a liga do game e retirar o peso w_i
-        let w_liga = run_config.w_division[liga]; // TODO: extrair a liga do game e retirar o peso w_i
+        let _w_liga = run_config.w_division[liga]; // TODO: extrair a liga do game e retirar o peso w_i
 
 
         // get the respective elos from the simulated_elos hashmap
