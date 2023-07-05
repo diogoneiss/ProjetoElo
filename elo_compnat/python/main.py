@@ -7,13 +7,13 @@ import pyswarms as ps
 import pyswarms.backend.topology as topologies
 import time
 from pyswarms.utils.plotters import (plot_cost_history, plot_contour, plot_surface)
-
-CORES = None
+from pyswarms.utils.plotters.formatters import Mesher
+CORES = 10
 
 
 
 # TODO: mover pro rust e só passar o caminho do arquivo
-partidas = elo_compnat.get_data()
+
 RunHyperparameters = elo_compnat.RunHyperparameters
 
 RunConfig = elo_compnat.RunConfig
@@ -51,6 +51,10 @@ pub struct RunConfig {
 }
 """
 
+def inserir_frequencia(x, valor=0.28, posicao=5):
+    return x[:posicao].tolist() + [valor] + x[posicao:].tolist()
+
+
 def swarm_fitness_function(x_list_of_lists):
     aggregated_fitness = np.zeros(len(x_list_of_lists))
 
@@ -60,18 +64,14 @@ def swarm_fitness_function(x_list_of_lists):
         # we have a x vector of dimension n, and need to create a config_list of size n+1, such that the 5th element is hard coded as 0.28
         position = 5
         # Create a config_list of size n+1
-        config_list = x[:position].tolist() + [0.28] + x[position:].tolist()
+        config_list = inserir_frequencia(x)
 
 
-
-        run_config_obj = RunConfig.from_list(config_list)
-
-        # print(run_config_obj.__dict__)
         start = time.perf_counter()
-        err = elo_compnat.fitness_function(
-            partidas, run_config_obj, hiperparametros_obj)
-        fitness = np.sum(err)
-        #print("Fitness function time: ", time.perf_counter() - start, " for solution ", idx, " with fitness ", fitness)
+        err = elo_compnat.fitness_function("brasileirao", config_list, hyperparams_list)
+        fitness = np.sum(np.abs(err))
+
+        print("Fitness function time: ", time.perf_counter() - start, " for solution ", idx, " with fitness ", fitness)
         # Append the fitness to the aggregated list
         aggregated_fitness[idx] = fitness
     #print("Aggregated fitness: ", aggregated_fitness)
@@ -79,12 +79,11 @@ def swarm_fitness_function(x_list_of_lists):
     # Return the aggregated fitness list
     return aggregated_fitness
 
+# resultado podre:     [ 0.00185522, -0.02959553,  0.83426157, -0.79967734, -0.0774037,   0.02039052  0.05995651]
+
 def run_genetic_algo():
     w_division = [40, 20]
-    genotype_list = [40, 1, 1, 0.0075, 1, 0.5, 0.28, *w_division]
-
-    run_config_obj = RunConfig.from_list(genotype_list)
-
+    genotype_list = [40, 1, 1, 0.0075, 1, 0.5, *w_division]
 
     posicao_parametros_runconfig = {'k_factor': 0,
                                     'gamma': 1,
@@ -105,7 +104,7 @@ def run_genetic_algo():
     
 
     err = elo_compnat.fitness_function(
-        partidas, run_config_obj, hiperparametros_obj)
+        "brasileirao", genotype_list, hyperparams_list)
 
 
     experiment_start_year = hyperparams_list[1]+hyperparams_list[2]
@@ -122,7 +121,6 @@ def run_genetic_algo():
     # usaremos isso aqui pra salvar em nuvem os resultados
     # insert_document()
 
-    # elo_compnat.run(hiperparametros_obj)
     fitness_function = fitness_func
 
 
@@ -195,13 +193,15 @@ def run_genetic_algo():
     ga_instance.plot_genes()
 
 def fitness_func(ga_instance, solution, solution_idx):
+    position = 5
+    # Create a config_list of size n+1
+    config_list = solution[:position].tolist() + [0.28] + solution[position:].tolist()
     # global parameters, we dont change them
-    # global partidas, hiperparametros_obj
-    run_config_obj = RunConfig.from_list(solution)
+    run_config_obj = RunConfig.from_list(config_list)
     # print(run_config_obj.__dict__)
     start = time.perf_counter()
     err = elo_compnat.fitness_function(
-        partidas, run_config_obj, hiperparametros_obj)
+        "brasileirao", solution, hyperparams_list)
     fitness = np.divide(1, np.sum(np.abs(err)))
     print("Fitness function time: ", time.perf_counter() - start, " for solution ", solution_idx, " with fitness ", fitness)
     return fitness
@@ -227,18 +227,24 @@ def main():
     bounds = (min_bound, max_bound)
 
     # hyperparameters for PSO
-    options = {'c1': 0.5, 'c2': 0.3, 'w': 0.9}
+    options = {'c1': 0.5, 'c2': 0.2, 'w': 0.9}
     my_topology = topologies.Ring(static=True)
     dimensions = len(gene_space_dict)
-
+    n_particles = 10
     # Call instance of GlobalBestPSO
     optimizer = ps.single.GlobalBestPSO(n_particles=10, dimensions=dimensions,
                                               options=options)
+    
+    cost, pos = optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=20)
 
-    cost, pos = optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=10)
+    print("Best cost: ", cost)
+    print("Best position: ", pos)
 
     plot_cost_history(cost_history=optimizer.cost_history)
     plt.show()
+
+    # TODO: implement grid search pyswarms.utils.search.random_search module
+
     return
 
 

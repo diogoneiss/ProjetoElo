@@ -18,6 +18,7 @@ pub fn run_experiments(
     run_config: &RunConfig,
     experiment_config: &RunHyperparameters,
 ) -> Vec<f64> {
+
     // Setup: Configure the required structs
     let elo_config = run_config.clone();
     // Pre processing: split the games into seasons, determine start and end years of backtesting
@@ -61,7 +62,7 @@ pub fn run_experiments(
 
             let season = seasons_map.get(&s_year).unwrap();
             let season_games = &season.matches;
-            let (rmse, _, real_elo, season_config) = super::run_single_experiment::run_season_experiment(
+            let (rmse, simulated_elo, real_elo, season_config) = super::run_single_experiment::run_season_experiment(
                 season_games,
                 &elo_table,
                 &last_season_config,

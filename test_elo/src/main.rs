@@ -8,7 +8,7 @@ fn main() {
     let test_config = RunConfig {
         k_factor: 1.5,
         gamma: 1.2,
-        home_advantage: 100.0,
+        home_advantage: 50.0,
         home_field_advantage_weight: 1.2,
         market_value_weight: 1.2,
         tie_frequency: 0.30,

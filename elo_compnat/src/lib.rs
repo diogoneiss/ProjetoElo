@@ -25,7 +25,7 @@ pub fn run(parameters: RunHyperparameters, config: Option<&RunConfig>) -> PyResu
 
     println!("Current directory: {}", &curr_directory);
 
-    let mut path = String::from("data/italia.csv");
+    let mut path = String::from("data/brasileirao.csv");
 
     // "ProjetoElo" is the last directory in the current_dir path prefix it to path
     if curr_directory.ends_with("lo") {
@@ -54,11 +54,10 @@ pub fn run(parameters: RunHyperparameters, config: Option<&RunConfig>) -> PyResu
     Ok(())
 }
 
-/// Use this to get the parsed Vec<game>
-#[pyfunction]
-pub fn get_data(py: Python) -> PyResult<PyObject> {
+
+pub fn get_data(filename: &str) -> Vec<Game> {
     // sim, essa funcao é copiada da run. Ideal seria deixarmos toda a logica de dataset aqui e so passar ele parseado bonitinho pro run
-    println!("Getting data..");
+
     let curr_directory: String = match std::env::current_dir() {
         Ok(path) => path.display().to_string(),
         Err(e) => panic!("Error getting current directory: {}", e),
@@ -68,7 +67,6 @@ pub fn get_data(py: Python) -> PyResult<PyObject> {
 
 
     let mut path = String::from("data/brasileirao.csv");
-
 
     // "ProjetoElo" is the last directory in the current_dir path prefix it to path
     // TODO: melhorar esse crime. Se chamamos dentro de elo_compnat, não precisa do prefixo
@@ -88,7 +86,7 @@ pub fn get_data(py: Python) -> PyResult<PyObject> {
         })
         .unwrap();
 
-    Ok(partidas.into_py(py))
+    partidas
 }
 
 #[pyfunction]
@@ -97,13 +95,14 @@ pub fn get_data(py: Python) -> PyResult<PyObject> {
 ///
 pub fn fitness_function(
     py: Python,
-    partidas_py: PyObject,
-    run_config_py: PyObject,
-    hyperparameters_py: PyObject,
+    filename: &str,
+    run_config_py: Vec<f64>,
+    hyperparameters_py: Vec<u16>,
 ) -> PyResult<Vec<f64>> {
-    let partidas: Vec<Game> = partidas_py.extract(py)?;
-    let run_config: RunConfig = run_config_py.extract(py)?;
-    let hyperparameters: RunHyperparameters = hyperparameters_py.extract(py)?;
+
+    let partidas: Vec<Game> = get_data(filename);
+    let run_config: RunConfig = RunConfig::from_python_list(run_config_py);
+    let hyperparameters: RunHyperparameters = RunHyperparameters::from_python_list(hyperparameters_py);
 
     //println!("Genotypes for this run: {:?}", &run_config);
     //println!("1a partida: {:?}", partidas[0]);
@@ -121,7 +120,6 @@ pub fn fitness_function(
 #[pymodule]
 fn elo_compnat(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(run, m)?)?;
-    m.add_function(wrap_pyfunction!(get_data, m)?)?;
     m.add_function(wrap_pyfunction!(fitness_function, m)?)?;
     m.add_class::<RunHyperparameters>()?;
     m.add_class::<RunConfig>()?;

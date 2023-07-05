@@ -26,24 +26,45 @@ pub fn transpose_matrix<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
 
 
 pub fn calculate_rmse(elo_diffs: &HashMap<String, f64>, season_match_count: Option<u32>) -> f64 {
-    let mut sum = 0.0;
+    
 
     let n = match season_match_count {
         Some(n) => n,
         None => elo_diffs.len() as u32,
     };
 
-    for (_, diff) in elo_diffs.iter() {
-        let diff_squared = diff.powi(2);
-        
-        if diff_squared.is_infinite() {
-            sum = f64::MAX;
-            break;
-        }
-        sum += diff_squared
+    let mut sum = 0.0;
+    let mut sum_squared = 0.0;
+
+    for (_, diff) in elo_diffs {
+        sum += diff;
     }
 
     let mean = sum / n as f64;
 
-    mean.sqrt()
+    for (_, diff) in elo_diffs {
+        let diff_squared = (diff - mean).powi(2);
+        if diff_squared.is_infinite() || diff_squared.is_nan() {
+            return f64::MAX;
+        }
+        sum_squared += diff_squared;
+    }
+
+    let variance = sum_squared / n as f64 - mean.powi(2);
+
+    let std = variance.sqrt();
+    //println!("mean: {}, variance: {} std: {}", mean, variance, std);
+
+    if std.is_nan() || std < 0.2 {
+        return 10000.0;
+    } 
+
+    let log_std = std.log(2.0);
+
+    if log_std.is_nan() || log_std.is_infinite() {
+        return 1000.0;
+    }
+    let mse = sum_squared / n as f64;
+    // regularize the error using the log of the standard deviation
+    mse.sqrt()
 }

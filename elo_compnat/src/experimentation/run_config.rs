@@ -48,6 +48,36 @@ impl Default for RunConfig {
     }
 }
 
+impl RunConfig {
+    pub fn from_python_list(params: Vec<f64>) -> Self {
+        if params.len() < 7 {
+            panic!(
+                "The input list should have at least 6 elements.",
+            );
+        }
+
+        let k_factor = params[0];
+        let gamma = params[1];
+        let home_advantage = params[2];
+        let home_field_advantage_weight = params[3];
+        let market_value_weight = params[4];
+        let tie_frequency = params[5];
+        let w_division: Vec<f64> = params[6..].to_vec();
+
+        RunConfig::new(
+            k_factor,
+            gamma,
+            home_advantage,
+            home_field_advantage_weight,
+            market_value_weight,
+            tie_frequency,
+            w_division,
+        )
+
+    }
+}
+
+
 #[pymethods]
 impl RunConfig {
     #[new]
@@ -207,6 +237,24 @@ impl RunHyperparameters {
             println!("|{}  :  {:.2}   |", base_year + i as u16, error);
         }
         println!("{}", &horizontal_line);
+    }
+    
+    pub fn from_python_list(params: Vec<u16>) -> Self {
+        if params.len() != 8 {
+            panic!(
+                "The input list should have exactly 8 elements.",
+            );
+        }
+        RunHyperparameters::new(
+            params[0],
+            params[1],
+            params[2],
+            params[3],
+            params[4] != 0,
+            params[5] != 0,
+            params[6] != 0,
+            params[7],
+        )
     }
 }
 #[pymethods]
