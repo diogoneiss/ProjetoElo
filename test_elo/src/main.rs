@@ -1,6 +1,6 @@
 use elo_compnat::{
     self,
-    experimentation::run_config::{RunConfig, RunHyperparameters},
+    experimentation::run_config::{RunConfig, RunHyperparameters}
 };
 
 fn main() {

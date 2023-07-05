@@ -78,29 +78,14 @@ pub fn run_experiments(
         }
         errors_for_each_run.push(errors_per_season);
         draw_frequency.push(tie_frequency);
-        print_elo_table(&elo_table, true);
     }
-
-    println!("Finished experiments");
-    println!("Draw frequency: ");
-    for i in 0..draw_frequency.len() {
-        println!("Draw frequency for experiment {}: {:?}", i, draw_frequency[i]);
-    }
-
-
-    // Tivemos que escolher estratégia de "seleção" do valor representativo da run. Será o melhor valor? O mediano? o médio?
-    // interessante plottarmos isso pra estudar no python. Acabamos optando por usar o valor médio
-
-
-    // iterate over the random variations. We need to calculate the mean 
 
     let season_errors = transpose_matrix(errors_for_each_run);
 
     let mean_errors_for_each_season = season_errors
         .iter()
-        .map(|errors| mean(errors).unwrap_or_else(|| {10000.0}))
+        .map(|errors| mean(errors).unwrap_or_else(|| {1000.0}))
         .collect::<Vec<f64>>();
- 
     mean_errors_for_each_season
 }
 
