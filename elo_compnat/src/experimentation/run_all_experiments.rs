@@ -113,12 +113,13 @@ pub fn run_experiments(
         draw_frequency.push(tie_frequency);
 
     }
-
+    /* 
     println!("Finished experiments");
     println!("Draw frequency: ");
     for i in 0..draw_frequency.len() {
         println!("Draw frequency for experiment {}: {:?}", i, draw_frequency[i]);
     }
+    */
 
     //print_elo_table(&elo_table, true);
     // Tivemos que escolher estratégia de "seleção" do valor representativo da run. Será o melhor valor? O mediano? o médio?

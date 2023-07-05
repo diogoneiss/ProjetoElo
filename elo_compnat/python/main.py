@@ -3,6 +3,8 @@ import numpy as np
 import pygad
 import matplotlib.pyplot as plt
 from cache import insert_document
+import pyswarms as ps
+
 
 # todo: parametrizar isso aqui para filtrar pelo nome do dataset
 partidas = elo_compnat.get_data()
@@ -78,14 +80,9 @@ if plot:
 
 # elo_compnat.run(hiperparametros_obj)
 
-function_inputs = [4, -2, 3.5, 5, -11, -4.7]
-desired_output = 44
-
-
 def fitness_func(ga_instance, solution, solution_idx):
     # global parameters, we dont change them
     global partidas, hiperparametros_obj
-    print(solution)
     run_config_obj = RunConfig.from_list(solution)
     print(run_config_obj.__dict__)
 
@@ -185,3 +182,11 @@ prediction = solution
 print(f"Parameters of the best solution : {solution}")
 print(f"Fitness value of the best solution = {solution_fitness}")
 print(f"Predicted output based on the best solution : {prediction}")
+ga_instance.plot_fitness()
+ga_instance.plot_new_solution_rate()
+ga_instance.plot_genes()
+
+
+# hyperparameters for PSO
+options = {'c1': 0.5, 'c2': 0.3, 'w':0.9}
+optimizer = ps.single.GlobalBestPSO(n_particles=10, dimensions=2, options=options)
