@@ -66,7 +66,7 @@ pub fn get_data(py: Python) -> PyResult<PyObject> {
 
     println!("Current directory: {}", &curr_directory);
 
-    let mut path = String::from("data/brasil.csv");
+    let mut path = String::from("data/alemanha.csv");
 
     // "ProjetoElo" is the last directory in the current_dir path prefix it to path
     // TODO: melhorar esse crime. Se chamamos dentro de elo_compnat, não precisa do prefixo
