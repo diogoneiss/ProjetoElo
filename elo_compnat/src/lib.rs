@@ -6,9 +6,6 @@ mod elo;
 pub mod experimentation;
 mod util;
 
-use elo::train::construct_elo_table_for_time_series;
-use elo::util::league::LeagueTable;
-
 use experimentation::run_config::{self, CustomElo};
 use experimentation::{run_all_experiments::run_experiments, run_config::CustomRating};
 
@@ -31,7 +28,7 @@ pub fn run(parameters: RunHyperparameters, config: Option<&RunConfig>) -> PyResu
     let mut path = String::from("data/brasileirao.csv");
 
     // "ProjetoElo" is the last directory in the current_dir path prefix it to path
-    if curr_directory.ends_with("ProjetoElo") {
+    if curr_directory.ends_with("lo") {
         println!("Current directory ends with ProjetoElo");
         let path2 = String::from("elo_compnat/");
         path = path2 + &path;
@@ -50,7 +47,6 @@ pub fn run(parameters: RunHyperparameters, config: Option<&RunConfig>) -> PyResu
         None => run_config::RunConfig::default(),
     };
 
-    
     let errors = run_experiments(&partidas, &run_config, &parameters);
 
     parameters.print_errors_by_year(&errors);
@@ -70,7 +66,7 @@ pub fn get_data(py: Python) -> PyResult<PyObject> {
 
     println!("Current directory: {}", &curr_directory);
 
-    let mut path = String::from("data/brasileirao.csv");
+    let mut path = String::from("data/brasil.csv");
 
     // "ProjetoElo" is the last directory in the current_dir path prefix it to path
     // TODO: melhorar esse crime. Se chamamos dentro de elo_compnat, não precisa do prefixo

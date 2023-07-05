@@ -34,7 +34,7 @@ pub fn simulate_season(
         let away = game.away.clone();
 
         let liga = 1; // TODO: extrair a liga do game e retirar o peso w_i
-        let w_liga = run_config.w_division[liga]; // TODO: extrair a liga do game e retirar o peso w_i
+        let _w_liga = run_config.w_division[liga]; // TODO: extrair a liga do game e retirar o peso w_i
 
 
         // get the respective elos from the simulated_elos hashmap
@@ -55,7 +55,6 @@ pub fn simulate_season(
         // calculate expected scores
         let (exp_tie, exp_home, _) = expected_score(&home_elo, &away_elo, run_config);
 
-        //generate two random numbers between 0 and 1, determine the winner (or draw) and update the elos
         let random_result: f64 = rng.gen();
 
         let tie = random_result < exp_tie;
@@ -78,7 +77,7 @@ pub fn simulate_season(
             _ => GameResult::D,
         };
 
-        match game.result {
+        match simulated_game.result {
             GameResult::D => acc_tie_count += 1.0,
             _ => (),
         };

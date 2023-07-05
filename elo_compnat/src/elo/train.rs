@@ -51,12 +51,12 @@ pub fn construct_elo_table_for_year(
 
 
         if home_team_elo.rating.is_nan()  {
-            println!("Elo is NaN for home team: {} at match {}", &home_team, partida.id);
+            println!("Elo is NaN for home team: {} at match {}", &home_team, partida.week);
             //let results_home = results_table.get(&home_team).unwrap();
            // println!("Results: {:?}", results_home);
         }
         if away_team_elo.rating.is_nan() {
-            println!("Elo is NaN for away_team: {} at match {}", &away_team, partida.id);
+            println!("Elo is NaN for away_team: {} at match {}", &away_team, partida.week);
             //let results_home = results_table.get(&away_team).unwrap();
            // println!("Results: {:?}", results_home);
         }

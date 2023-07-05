@@ -14,19 +14,28 @@ pub enum GameResult {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[pyclass]
 pub struct Game {
-    pub id: u64,
+    #[serde(rename = "Week")]
+    pub week: f32,
+    #[serde(rename = "Date")]
+    pub date: String,
     #[serde(rename = "HomeTeam")]
     pub home: String,
     #[serde(rename = "AwayTeam")]
     pub away: String,
-    #[serde(rename = "FTHG")]
+    #[serde(rename = "HomeGoals")]
     pub home_score: u16,
-    #[serde(rename = "FTAG")]
+    #[serde(rename = "AwayGoals")]
     pub away_score: u16,
-    #[serde(rename = "FTR")]
+    #[serde(rename = "Result")]
     pub result: GameResult,
     #[serde(rename = "Season")]
     pub year: u16,
+    #[serde(rename = "Divisao")]
+    pub division: u8,
+    #[serde(rename = "HomeTeam_value_norm2")]
+    pub home_value: f64,
+    #[serde(rename = "AwayTeam_value_norm2")]
+    pub away_value: f64,
     pub home_elo: Option<f64>,
     pub away_elo: Option<f64>,
 }
@@ -45,24 +54,32 @@ impl Game {
 impl Game {
     #[new]
     fn new(
-        id: u64,
+        week: f32,
+        date: String,
         home: String,
         away: String,
         home_score: u16,
         away_score: u16,
         result: GameResult,
         year: u16,
+        division: u8,
+        home_value: f64,
+        away_value: f64,
         home_elo: Option<f64>,
         away_elo: Option<f64>
     ) -> Game {
         Game {
-            id,
+            week,
+            date,
             home,
             away,
             home_score,
             away_score,
             result,
             year,
+            division,
+            home_value,
+            away_value,
             home_elo,
             away_elo
         }

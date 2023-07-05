@@ -1,13 +1,10 @@
 use std::collections::{HashMap, HashSet};
 
-use skillratings::elo::EloConfig;
-
 use crate::{elo::{
     train::{
         construct_elo_table_for_year,
         EloTable,
     },
-    util::{league::LeagueTable, season},
 }, util::math::calculate_rmse};
 
 use crate::{experimentation::simulate_season::simulate_season, util::game::Game};
@@ -22,7 +19,7 @@ pub fn run_season_experiment(
     experiment_config: &run_config::RunHyperparameters,
     random_seed: u32,
 ) -> (f64, EloTable, EloTable, RunConfig) {
-    let (elo_simulated, simulated_matches, config_after_run) = simulate_season(
+    let (elo_simulated, _, config_after_run) = simulate_season(
         season_games,
         starting_elo,
         run_config,

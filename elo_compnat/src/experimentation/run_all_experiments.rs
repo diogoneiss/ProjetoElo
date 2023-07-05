@@ -3,7 +3,7 @@ use crate::{elo::{
         construct_elo_table_for_time_series,
         EloTable,
     },
-    util::{league::LeagueTable, season},
+    util::{season},
 }, util::math::{mean, transpose_matrix}};
 
 use crate::{util::game::Game};

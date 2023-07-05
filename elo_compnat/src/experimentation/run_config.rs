@@ -1,4 +1,4 @@
-use crate::util::game::{Game, GameResult};
+use crate::util::game::{GameResult};
 use pyo3::exceptions::PyValueError;
 use pyo3::{prelude::*, types::PyDict};
 use serde::{Deserialize, Serialize};
@@ -37,13 +37,13 @@ impl Eq for RunConfig {}
 impl Default for RunConfig {
     fn default() -> Self {
         RunConfig {
-            k_factor: 20.0,
+            k_factor: 1.0,
             gamma: 1.0,
             home_advantage: 10.0,
             home_field_advantage_weight: 0.075,
             market_value_weight: 1.0,
             tie_frequency: 0.5,
-            w_division: vec![1.0],
+            w_division: vec![1.0, 1.0],
         }
     }
 }
@@ -342,13 +342,11 @@ impl CustomElo {
         let RunConfig {
             k_factor,
             gamma,
-            home_advantage,
-            home_field_advantage_weight,
             market_value_weight,
-            tie_frequency,
             w_division,
+            ..
         } = self.config.clone();
-        let (tie_expected, one_expected, two_expected) =
+        let (_, one_expected, two_expected) =
             expected_score(player_one, player_two, &self.config);
         let real_player_one_score: f64 = match outcome {
             GameResult::H => 1.0,
@@ -358,26 +356,37 @@ impl CustomElo {
         let real_player_two_score: f64 = 1.0 - real_player_one_score;
 
         let change_p1 = k_factor
-                * w_division[0]
-                * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
-                * ((1.0 + absolute_goal_diff).powf(gamma))
-                * (real_player_one_score - one_expected);
+            * w_division[0]
+            * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
+            * ((1.0 + absolute_goal_diff).powf(gamma))
+            * (real_player_one_score - one_expected)
+            / 100.0;
 
         let mut player_one_new_rate: f64 = player_one.rating + change_p1;
         if player_one_new_rate.is_infinite() {
-            player_one_new_rate = if player_one_new_rate.is_sign_positive() { f64::MAX } else { f64::MIN };
+            player_one_new_rate = if player_one_new_rate.is_sign_positive() {
+                f64::MAX
+            } else {
+                f64::MIN
+            };
         }
 
-        let change_p2 =  k_factor
-                * w_division[0]
-                * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
-                * ((1.0 + absolute_goal_diff).powf(gamma))
-                * (real_player_two_score - two_expected);
+        let change_p2 = k_factor
+            * w_division[0]
+            * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
+            * ((1.0 + absolute_goal_diff).powf(gamma))
+            * (real_player_two_score - two_expected)
+            / 100.0; // Confia
         let mut player_two_new_rate: f64 = player_two.rating + change_p2;
 
         if player_two_new_rate.is_infinite() {
-            player_two_new_rate = if player_two_new_rate.is_sign_positive() { f64::MAX } else { f64::MIN };
+            player_two_new_rate = if player_two_new_rate.is_sign_positive() {
+                f64::MAX
+            } else {
+                f64::MIN
+            };
         }
+        /* println!("{} {}", player_one_new_rate, player_two_new_rate); */
         (
             CustomRating {
                 rating: player_one_new_rate,
@@ -394,7 +403,6 @@ pub fn expected_score(
     player_two: &CustomRating,
     config: &RunConfig,
 ) -> (f64, f64, f64) {
-
     let RunConfig {
         home_advantage,
         tie_frequency,
@@ -404,7 +412,7 @@ pub fn expected_score(
     let basis: f64 = 10.0;
     let exponent = (player_two.rating - player_one.rating - home_advantage) / 400.0;
     let denominator = basis.powf(exponent) + basis.powf(-1.0 * exponent) + tie_frequency;
-    // check if denominator is infinite
+
     if denominator.is_infinite() {
         if denominator.is_sign_positive() {
             return (0.0, 0.0, 1.0);
