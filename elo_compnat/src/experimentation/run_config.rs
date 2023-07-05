@@ -355,12 +355,19 @@ impl CustomElo {
         };
         let real_player_two_score: f64 = 1.0 - real_player_one_score;
 
+        let normalizazed_goal_diff: f64 = match absolute_goal_diff as u32 {
+            1 => 0.25,
+            2 => 0.5,
+            3 => 0.75,
+            _ => 1.0
+        };
+
         let change_p1 = k_factor
             * w_division[0]
             * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
-            * ((1.0 + absolute_goal_diff).powf(gamma))
-            * (real_player_one_score - one_expected)
-            / 100.0;
+            * ((1.0 + normalizazed_goal_diff).powf(gamma))
+            * (real_player_one_score - one_expected);
+
 
         let mut player_one_new_rate: f64 = player_one.rating + change_p1;
         if player_one_new_rate.is_infinite() {
@@ -374,9 +381,9 @@ impl CustomElo {
         let change_p2 = k_factor
             * w_division[0]
             * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
-            * ((1.0 + absolute_goal_diff).powf(gamma))
-            * (real_player_two_score - two_expected)
-            / 100.0; // Confia
+            * ((1.0 + normalizazed_goal_diff).powf(gamma))
+            * (real_player_two_score - two_expected);
+
         let mut player_two_new_rate: f64 = player_two.rating + change_p2;
 
         if player_two_new_rate.is_infinite() {
