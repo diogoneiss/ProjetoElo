@@ -34,7 +34,13 @@ pub fn calculate_rmse(elo_diffs: &HashMap<String, f64>, season_match_count: Opti
     };
 
     for (_, diff) in elo_diffs.iter() {
-        sum += diff.powi(2);
+        let diff_squared = diff.powi(2);
+        
+        if diff_squared.is_infinite() {
+            sum = f64::MAX;
+            break;
+        }
+        sum += diff_squared
     }
 
     let mean = sum / n as f64;

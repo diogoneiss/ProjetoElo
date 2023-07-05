@@ -1,23 +1,21 @@
-use std::{collections::HashMap};
-
 use crate::{elo::{
     train::{
-        construct_elo_table_for_time_series, construct_elo_table_for_year,
+        construct_elo_table_for_time_series,
         EloTable,
     },
     util::{league::LeagueTable, season},
 }, util::math::{mean, transpose_matrix}};
 
-use crate::{experimentation::simulate_season::simulate_season, util::game::Game};
+use crate::{util::game::Game};
 
-use super::{run_all_experiments, run_config};
+use super::{run_config::{RunConfig, RunHyperparameters}};
 
 /// Performs the backtesting for t years and experiments with the elo metric for n-t remaining years.
 /// Note that the next year is based on the real year, not the simulated one.
 pub fn run_experiments(
     all_games: &[Game],
-    run_config: &run_config::RunConfig,
-    experiment_config: &run_config::RunHyperparameters,
+    run_config: &RunConfig,
+    experiment_config: &RunHyperparameters,
 ) -> Vec<f64> {
     // Setup: Configure the required structs
     let elo_config = run_config.clone();
@@ -46,19 +44,22 @@ pub fn run_experiments(
     let end_t = *seasons_map.keys().max().unwrap();
 
     let mut errors_for_each_run: Vec<Vec<f64>> = Vec::new();
+    let mut draw_frequency: Vec<Vec<f64>> = Vec::new();
 
     for i in 0..experiment_config.random_variations {
         // we set the seed for the random number generator at the simulation function, with i as its seed
-
+        
         let mut errors_per_season: Vec<f64> = Vec::new();
+        let mut last_season_config = elo_config.clone();
 
         let mut elo_table = elo_table_at_start.clone();
+        let mut tie_frequency = vec![];
+
         for s_year in start_t..=end_t {
             //TODO: perform n random variations, with unique seeds
 
             let season = seasons_map.get(&s_year).unwrap();
             let season_games = &season.matches;
-
             /*
             OUTPUT / elo comparison decisions
             2 options on how to measure the error between expected and simulated elo
@@ -89,25 +90,35 @@ pub fn run_experiments(
             */
 
             // use elo table as the starting elo for the next season, using it to measure the error as well.
-            let (rmse, _, real_elo) = super::run_single_experiment::run_season_experiment(
+            let (rmse, _, real_elo, season_config) = super::run_single_experiment::run_season_experiment(
                 season_games,
                 &elo_table,
-                run_config,
+                &last_season_config,
                 experiment_config,
                 i as u32,
             );
 
+            // save the season config for the next iteration, with the updated weigths
+            last_season_config = season_config;
+            tie_frequency.push(last_season_config.tie_frequency);
             // Update the elo tables for the next iteration
             // As we are using option 2, we will use the real elo table for the next season, so it needs to be updated.
             elo_table = real_elo;
 
             errors_per_season.push(rmse);
+
         }
         // Save the errors for this experiment in the vector, we will later calculate the mean for this experiment
         errors_for_each_run.push(errors_per_season);
+        draw_frequency.push(tie_frequency);
+
     }
 
     println!("Finished experiments");
+    println!("Draw frequency: ");
+    for i in 0..draw_frequency.len() {
+        println!("Draw frequency for experiment {}: {:?}", i, draw_frequency[i]);
+    }
 
     //print_elo_table(&elo_table, true);
     // Tivemos que escolher estratégia de "seleção" do valor representativo da run. Será o melhor valor? O mediano? o médio?

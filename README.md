@@ -11,3 +11,11 @@
 ## Como rodar o python
 
 Só chamar `python python/main.py`
+
+# TODO
+1. Fazer a função de backtesting registrar a frequência e outros parâmetros, igual fazemos na experimentação
+2. Parse dos dados
+3. Incluir coluna de home e away elo nos csvs
+4. Usar peso de partidas de acordo com a liga
+5. Função que monta o dataset para regressão (talvez só salvar num path e ler...)
+6. Salvar elo nas partidas

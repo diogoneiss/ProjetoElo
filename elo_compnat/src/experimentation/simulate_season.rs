@@ -20,7 +20,7 @@ pub fn simulate_season(
     let mut acc_home_elo_variation: f64 = 0.0;
     let mut acc_away_elo_variation: f64 = 0.0;
 
-    let mut acc_tie_frequency: f64 = 0.0;
+    let mut acc_tie_count: f64 = 0.0;
 
     // TODO: extrair a liga do game e retirar o peso w_i
     let mut simulated_games: Vec<Game> = games.to_vec();
@@ -32,6 +32,10 @@ pub fn simulate_season(
         // get the home and away teams from match
         let home = game.home.clone();
         let away = game.away.clone();
+
+        let liga = 1; // TODO: extrair a liga do game e retirar o peso w_i
+        let w_liga = run_config.w_division[liga]; // TODO: extrair a liga do game e retirar o peso w_i
+
 
         // get the respective elos from the simulated_elos hashmap
 
@@ -58,7 +62,10 @@ pub fn simulate_season(
         let home_wins = random_result > exp_tie && random_result < exp_tie + exp_home;
         let away_wins = !(tie || home_wins);
 
+        assert!(tie || home_wins || away_wins, "Missing case!" );
+
         let mut simulated_game = game.clone();
+        
         let absolute_goal_diff: f64 = ((game.home_score as i8) - (game.away_score as i8))
             .abs()
             .into();
@@ -72,7 +79,7 @@ pub fn simulate_season(
         };
 
         match game.result {
-            GameResult::D => acc_tie_frequency += 1.0,
+            GameResult::D => acc_tie_count += 1.0,
             _ => (),
         };
 
@@ -103,6 +110,9 @@ pub fn simulate_season(
 
         // update elos
         starting_elos.insert(home, new_player_home);
+
+        simulated_game.home_elo = Some(new_player_home.rating);
+        simulated_game.away_elo = Some(new_player_away.rating);
         starting_elos.insert(away, new_player_away);
 
         // update the ith game in the simulated_games vector with the simulated result
@@ -110,8 +120,11 @@ pub fn simulate_season(
     }
 
     let mut config_copy = run_config.clone();
-    config_copy.tie_frequency = acc_tie_frequency / (games.len() as f64);
-    config_copy.home_advantage +=
-        config_copy.home_field_advantage_weight * (acc_home_elo_variation - acc_away_elo_variation);
+
+    config_copy.tie_frequency = acc_tie_count / (games.len() as f64);
+
+    let delta_elo = acc_home_elo_variation - acc_away_elo_variation;
+    config_copy.home_advantage +=  config_copy.home_field_advantage_weight * delta_elo;
+    
     (starting_elos, simulated_games.to_vec(), config_copy)
 }
