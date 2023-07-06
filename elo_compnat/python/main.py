@@ -9,7 +9,8 @@ import time
 from pyswarms.utils.plotters import (plot_cost_history, plot_contour, plot_surface)
 from pyswarms.utils.plotters.formatters import Mesher
 from pyswarms.utils.search import RandomSearch
-CORES = 1
+
+CORES = 10
 
 
 
@@ -52,8 +53,12 @@ pub struct RunConfig {
 }
 """
 
-def inserir_frequencia(x, valor=0.28, posicao=5):
-    return x[:posicao].tolist() + [valor] + x[posicao:].tolist()
+def inserir_frequencia(x, valor=0.28, posicao=5) -> list:
+    pre = x[:posicao].tolist()
+    pos = x[posicao:].tolist()
+    #print("Pre: ", pre)
+    #print("Pos: ", pos)
+    return  pre + [valor] + pos
 
 
 def run_swarm(options_list):
@@ -64,8 +69,9 @@ def run_swarm(options_list):
     max_bound = np.array(low_values)
     min_bound = np.array(high_values)
     bounds = (min_bound, max_bound)
-    dimensions = len(gene_space_dict)
 
+    dimensions = len(gene_space_dict)
+    #print("Dimensions: ", dimensions)
     options = {'c1': 0.5, 'c2': 0.3, 'w':0.9}
 
     # create a dict with the options from the x values
@@ -78,8 +84,9 @@ def run_swarm(options_list):
     optimizer = ps.single.GlobalBestPSO(n_particles=10, dimensions=dimensions,
                                               options=options, bounds=bounds )
     
-    cost, pos = optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=20)
-
+    #print("Chamando o optimizer")
+    cost, pos = optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=10)
+    print(f"==== Final cost for this swarm: {cost} ==== and parameters = {np.round(pos, 2)}")
     return cost, pos
 
 
@@ -87,7 +94,7 @@ def meta_swarm_fitness_function(x_list):
     
     cost_list = []
     for x in x_list:
-        print("Running swarm with options: ", x)
+        #print("Running swarm with options: ", x)
         
         # Perform optimization
         cost, pos = run_swarm(x)
@@ -100,18 +107,18 @@ def swarm_fitness_function(x_list_of_lists):
 
     for idx, x in enumerate(x_list_of_lists):
 
-
-        # we have a x vector of dimension n, and need to create a config_list of size n+1, such that the 5th element is hard coded as 0.28
-        position = 5
         # Create a config_list of size n+1
         config_list = inserir_frequencia(x)
-
+        #print("x: ", config_list)
+        #print("Hyperparams list: ", hyperparams_list)
+        
 
         start = time.perf_counter()
+        #print("Hip: ", hyperparams_list)
         err = elo_compnat.fitness_function("brasileirao", config_list, hyperparams_list)
         fitness = np.sum(np.abs(err))
 
-        print("Fitness function time: ", time.perf_counter() - start, " for solution ", idx, " with fitness ", fitness)
+        #print("Fitness function time: ", time.perf_counter() - start, " for solution ", idx, " with fitness ", fitness)
         # Append the fitness to the aggregated list
         aggregated_fitness[idx] = fitness
     #print("Aggregated fitness: ", aggregated_fitness)
@@ -280,15 +287,15 @@ def main():
 
         # Call instance of GlobalBestPSO for our meta experiment
         meta_optimizer = ps.single.GlobalBestPSO(n_particles=10, dimensions=len(max_bound),
-                                                    options=options, bounds=bounds )
+                                                    options=options, bounds=bounds_meta )
             
 
             
-        cost, pos = meta_optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=20)
+        cost, pos = meta_optimizer.optimize(meta_swarm_fitness_function,  n_processes=None, iters=20)
         print("Best cost: ", cost)
         print("Best parameters for c1 c2 and w: ", pos)
 
-
+    meta_optimize()
     """
     options = {'c1': [0.3, 2],
                'c2': [0.3, 2],
@@ -309,12 +316,12 @@ def main():
         dimensions = len(gene_space_dict)
         n_particles = 10
         # Call instance of GlobalBestPSO
-        optimizer = ps.single.GlobalBestPSO(n_particles=10, dimensions=dimensions,
+        optimizer = ps.single.GlobalBestPSO(n_particles=30, dimensions=dimensions,
                                                 options=options, bounds=bounds )
         
 
         
-        cost, pos = optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=5)
+        cost, pos = optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=50)
 
         print("Best cost: ", cost)
         print("Best position: ", pos)
@@ -323,7 +330,7 @@ def main():
         plt.title("Cost history")
         plt.show()
 
-    optimize_elo()
+    #optimize_elo()
 
     # TODO: implement grid search pyswarms.utils.search.random_search module
 

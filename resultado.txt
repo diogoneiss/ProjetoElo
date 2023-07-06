@@ -1,0 +1,10 @@
+Melhores parâmetros otimização
+
+[  2.49518433   2.79995614   2.65563014   1.80708322   1.28271224
+ 125.16330199 115.40319719]
+
+Iterações: 50
+Particulas: 30
+Opções: c1 = 0.5, c2 = 0.2 e w = 0.9
+Cores = 10
+grafico de custo: 

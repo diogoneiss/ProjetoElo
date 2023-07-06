@@ -38,15 +38,17 @@ try:
     collection = db[COLLECTION_NAME]
 except FileNotFoundError:
     ENV_EXISTS = False
-    horizontal_line = "--------------------------------------------------" * 2
+    show_message = False
+    if show_message:
+        horizontal_line = "--------------------------------------------------" * 2
 
-    print("\n\n\n")
-    print(horizontal_line)
-    print(
-        "The .env file does not exist. Please create one in the parent directory to use the remote db."
-    )
-    print(horizontal_line)
-    print("\n\n\n")
+        print("\n\n\n")
+        print(horizontal_line)
+        print(
+            "The .env file does not exist. Please create one in the parent directory to use the remote db."
+        )
+        print(horizontal_line)
+        print("\n\n\n")
 
 
 def insert_document(df=pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})):
