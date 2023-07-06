@@ -1,4 +1,4 @@
-use crate::util::game::{GameResult};
+use crate::util::game::GameResult;
 use pyo3::exceptions::PyValueError;
 use pyo3::{prelude::*, types::PyDict};
 use serde::{Deserialize, Serialize};
@@ -51,9 +51,7 @@ impl Default for RunConfig {
 impl RunConfig {
     pub fn from_python_list(params: Vec<f64>) -> Self {
         if params.len() < 7 {
-            panic!(
-                "The input list should have at least 6 elements.",
-            );
+            panic!("The input list should have at least 6 elements.",);
         }
 
         let k_factor = params[0];
@@ -73,10 +71,8 @@ impl RunConfig {
             tie_frequency,
             w_division,
         )
-
     }
 }
-
 
 #[pymethods]
 impl RunConfig {
@@ -238,12 +234,10 @@ impl RunHyperparameters {
         }
         println!("{}", &horizontal_line);
     }
-    
+
     pub fn from_python_list(params: Vec<u16>) -> Self {
         if params.len() != 8 {
-            panic!(
-                "The input list should have exactly 8 elements.",
-            );
+            panic!("The input list should have exactly 8 elements.",);
         }
         RunHyperparameters::new(
             params[0],
@@ -386,7 +380,7 @@ impl CustomElo {
         outcome: GameResult,
         absolute_goal_diff: f64,
         absolute_market_value_diff: f64,
-        division: usize
+        division: usize,
     ) -> (CustomRating, CustomRating) {
         let RunConfig {
             k_factor,
@@ -395,8 +389,7 @@ impl CustomElo {
             w_division,
             ..
         } = self.config.clone();
-        let (_, one_expected, two_expected) =
-            expected_score(player_one, player_two, &self.config);
+        let (_, one_expected, two_expected) = expected_score(player_one, player_two, &self.config);
         let real_player_one_score: f64 = match outcome {
             GameResult::H => 1.0,
             GameResult::D => 0.5,
@@ -408,7 +401,7 @@ impl CustomElo {
             1 => 0.25,
             2 => 0.5,
             3 => 0.75,
-            _ => 1.0
+            _ => 1.0,
         };
 
         let change_p1 = k_factor
@@ -416,7 +409,6 @@ impl CustomElo {
             * ((1.0 + absolute_market_value_diff).powf(market_value_weight))
             * ((1.0 + normalizazed_goal_diff).powf(gamma))
             * (real_player_one_score - one_expected);
-
 
         let mut player_one_new_rate: f64 = player_one.rating + change_p1;
         if player_one_new_rate.is_infinite() {
@@ -489,10 +481,10 @@ pub fn expected_score(
 
     let probs = (exp_tie, exp_one, exp_two);
 
-    let err_msg = format!("Probabilities should sum to one, they are {exp_tie} {exp_one} {exp_two}");
+    let err_msg =
+        format!("Probabilities should sum to one, they are {exp_tie} {exp_one} {exp_two}");
 
     assert!(zero < f64::EPSILON, "{}", err_msg);
 
     probs
-
 }

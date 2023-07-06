@@ -40,25 +40,29 @@ pub fn construct_elo_table_for_year(
         let (home_outcome, away_outcome) = partida.get_match_outcome();
 
         let current_elo = |team_name: &String| {
-            elo_table
-                .get(team_name)
-                .cloned()
-                .unwrap_or_else(|| CustomRating {rating: run_hyperparameters.starting_elo as f64})
+            elo_table.get(team_name).cloned().unwrap_or(CustomRating {
+                rating: run_hyperparameters.starting_elo as f64,
+            })
         };
 
         let home_team_elo = current_elo(&home_team);
         let away_team_elo = current_elo(&away_team);
 
-
-        if home_team_elo.rating.is_nan()  {
-            println!("Elo is NaN for home team: {} at match {}", &home_team, partida.week);
+        if home_team_elo.rating.is_nan() {
+            println!(
+                "Elo is NaN for home team: {} at match {}",
+                &home_team, partida.week
+            );
             //let results_home = results_table.get(&home_team).unwrap();
-           // println!("Results: {:?}", results_home);
+            // println!("Results: {:?}", results_home);
         }
         if away_team_elo.rating.is_nan() {
-            println!("Elo is NaN for away_team: {} at match {}", &away_team, partida.week);
+            println!(
+                "Elo is NaN for away_team: {} at match {}",
+                &away_team, partida.week
+            );
             //let results_home = results_table.get(&away_team).unwrap();
-           // println!("Results: {:?}", results_home);
+            // println!("Results: {:?}", results_home);
         }
 
         // Salvar histórico de resultados desses times e elos
@@ -80,8 +84,7 @@ pub fn construct_elo_table_for_year(
             .abs()
             .into();
 
-        let absolute_market_value_diff: f64 = (partida.home_value - partida.away_value)
-        .abs();
+        let absolute_market_value_diff: f64 = (partida.home_value - partida.away_value).abs();
 
         let (new_player_home, new_player_away) = custom_elo.rate(
             &home_team_elo,
@@ -89,7 +92,7 @@ pub fn construct_elo_table_for_year(
             partida.result,
             absolute_goal_diff,
             absolute_market_value_diff,
-            partida.division as usize
+            partida.division as usize,
         );
 
         elo_table.insert(home_team, new_player_home);
@@ -137,8 +140,12 @@ pub fn construct_elo_table_for_time_series(
     for year in desired_range.into_iter() {
         let season = seasons_map.get(&year).unwrap();
         let partidas = &season.matches;
-        let elo_table =
-            construct_elo_table_for_year(partidas, starting_elo_table, Some(elo_config), &run_hyperparameters );
+        let elo_table = construct_elo_table_for_year(
+            partidas,
+            starting_elo_table,
+            Some(elo_config),
+            run_hyperparameters,
+        );
         starting_elo_table = Some(elo_table.clone());
 
         if DEBUG_INFO {

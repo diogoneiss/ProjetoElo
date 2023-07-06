@@ -2,7 +2,6 @@ use crate::util::game::Game;
 use std::error::Error;
 
 pub fn load_csv(path: &str) -> Result<Vec<Game>, Box<dyn Error>> {
-
     let mut reader = csv::Reader::from_path(path)?;
     let result: Vec<Game> = reader
         .deserialize()

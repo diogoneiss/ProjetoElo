@@ -66,7 +66,7 @@ impl Game {
         home_value: f64,
         away_value: f64,
         home_elo: Option<f64>,
-        away_elo: Option<f64>
+        away_elo: Option<f64>,
     ) -> Game {
         Game {
             week,
@@ -81,7 +81,7 @@ impl Game {
             home_value,
             away_value,
             home_elo,
-            away_elo
+            away_elo,
         }
     }
 }

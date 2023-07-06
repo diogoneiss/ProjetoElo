@@ -36,18 +36,17 @@ pub fn simulate_season(
         let liga = game.division as usize;
         let _w_liga = run_config.w_division[liga - 1]; // TODO: extrair a liga do game e retirar o peso w_i
 
-
         let mut new_elo = CustomRating::new();
         new_elo.rating = experiment_config.starting_elo.into();
 
         let home_elo = match starting_elos.get(&home) {
-            Some(elo) => elo.clone(),
-            None => new_elo.clone(),
+            Some(elo) => *elo,
+            None => new_elo,
         };
 
         let away_elo = match starting_elos.get(&away) {
-            Some(elo) => elo.clone(),
-            None => new_elo.clone(),
+            Some(elo) => *elo,
+            None => new_elo,
         };
 
         // calculate expected scores
@@ -59,16 +58,15 @@ pub fn simulate_season(
         let home_wins = random_result > exp_tie && random_result < exp_tie + exp_home;
         let away_wins = !(tie || home_wins);
 
-        assert!(tie || home_wins || away_wins, "Missing case!" );
+        assert!(tie || home_wins || away_wins, "Missing case!");
 
         let mut simulated_game = game.clone();
-        
+
         let absolute_goal_diff: f64 = ((game.home_score as i8) - (game.away_score as i8))
             .abs()
             .into();
 
-        let absolute_market_value_diff: f64 = (game.home_value - game.away_value)
-        .abs();
+        let absolute_market_value_diff: f64 = (game.home_value - game.away_value).abs();
 
         // assign the result to the simulated game according to home team's perspective
         simulated_game.result = match (tie, home_wins, away_wins) {
@@ -78,9 +76,8 @@ pub fn simulate_season(
         };
 
         // checar se isso ta certo
-        match game.result {
-            GameResult::D => acc_tie_count += 1.0,
-            _ => (),
+        if let GameResult::D = game.result {
+            acc_tie_count += 1.0
         };
 
         // hard coded value as we are not using the real game goal difference
@@ -100,7 +97,7 @@ pub fn simulate_season(
             simulated_game.result,
             absolute_goal_diff,
             absolute_market_value_diff,
-            game.division as usize
+            game.division as usize,
         );
 
         let home_diff = new_player_home.rating - home_elo.rating;
@@ -125,7 +122,7 @@ pub fn simulate_season(
     config_copy.tie_frequency = acc_tie_count / (games.len() as f64);
 
     let delta_elo = acc_home_elo_variation - acc_away_elo_variation;
-    config_copy.home_advantage +=  config_copy.home_field_advantage_weight * delta_elo;
-    
+    config_copy.home_advantage += config_copy.home_field_advantage_weight * delta_elo;
+
     (starting_elos, simulated_games.to_vec(), config_copy)
 }

@@ -54,7 +54,6 @@ pub fn run(parameters: RunHyperparameters, config: Option<&RunConfig>) -> PyResu
     Ok(())
 }
 
-
 pub fn get_data(filename: &str) -> Vec<Game> {
     // sim, essa funcao é copiada da run. Ideal seria deixarmos toda a logica de dataset aqui e so passar ele parseado bonitinho pro run
 
@@ -65,8 +64,7 @@ pub fn get_data(filename: &str) -> Vec<Game> {
 
     println!("Current directory: {}", &curr_directory);
 
-
-    let mut path = String::from("data/brasileirao.csv");
+    let mut path = String::from(filename);
 
     // "ProjetoElo" is the last directory in the current_dir path prefix it to path
     // TODO: melhorar esse crime. Se chamamos dentro de elo_compnat, não precisa do prefixo
@@ -94,15 +92,15 @@ pub fn get_data(filename: &str) -> Vec<Game> {
 /// data parsed
 ///
 pub fn fitness_function(
-    py: Python,
+    _py: Python,
     filename: &str,
     run_config_py: Vec<f64>,
     hyperparameters_py: Vec<u16>,
 ) -> PyResult<Vec<f64>> {
-
     let partidas: Vec<Game> = get_data(filename);
     let run_config: RunConfig = RunConfig::from_python_list(run_config_py);
-    let hyperparameters: RunHyperparameters = RunHyperparameters::from_python_list(hyperparameters_py);
+    let hyperparameters: RunHyperparameters =
+        RunHyperparameters::from_python_list(hyperparameters_py);
 
     //println!("Genotypes for this run: {:?}", &run_config);
     //println!("1a partida: {:?}", partidas[0]);

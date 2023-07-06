@@ -1,15 +1,14 @@
-use crate::{elo::{
-    train::{
-        construct_elo_table_for_time_series,
-        EloTable,
-        print_elo_table
+use crate::{
+    elo::{
+        train::{construct_elo_table_for_time_series, EloTable},
+        util::season,
     },
-    util::{season},
-}, util::math::{mean, transpose_matrix}};
+    util::math::{mean, transpose_matrix},
+};
 
-use crate::{util::game::Game};
+use crate::util::game::Game;
 
-use super::{run_config::{RunConfig, RunHyperparameters}};
+use super::run_config::{RunConfig, RunHyperparameters};
 
 /// Performs the backtesting for t years and experiments with the elo metric for n-t remaining years.
 /// Note that the next year is based on the real year, not the simulated one.
@@ -18,7 +17,6 @@ pub fn run_experiments(
     run_config: &RunConfig,
     experiment_config: &RunHyperparameters,
 ) -> Vec<f64> {
-
     // Setup: Configure the required structs
     let elo_config = run_config.clone();
     // Pre processing: split the games into seasons, determine start and end years of backtesting
@@ -30,7 +28,7 @@ pub fn run_experiments(
     let elo_table_at_start = construct_elo_table_for_time_series(
         all_games,
         Some(&elo_config),
-        &experiment_config,
+        experiment_config,
         experiment_config.starting_year,
         end_year,
     );
@@ -50,7 +48,7 @@ pub fn run_experiments(
 
     for i in 0..experiment_config.random_variations {
         // we set the seed for the random number generator at the simulation function, with i as its seed
-        
+
         let mut errors_per_season: Vec<f64> = Vec::new();
         let mut last_season_config = elo_config.clone();
 
@@ -62,13 +60,14 @@ pub fn run_experiments(
 
             let season = seasons_map.get(&s_year).unwrap();
             let season_games = &season.matches;
-            let (rmse, simulated_elo, real_elo, season_config) = super::run_single_experiment::run_season_experiment(
-                season_games,
-                &elo_table,
-                &last_season_config,
-                experiment_config,
-                i as u32,
-            );
+            let (rmse, _, real_elo, season_config) =
+                super::run_single_experiment::run_season_experiment(
+                    season_games,
+                    &elo_table,
+                    &last_season_config,
+                    experiment_config,
+                    i as u32,
+                );
 
             last_season_config = season_config;
             tie_frequency.push(last_season_config.tie_frequency);
@@ -79,20 +78,16 @@ pub fn run_experiments(
         }
         errors_for_each_run.push(errors_per_season);
         draw_frequency.push(tie_frequency);
-
     }
-
 
     let season_errors = transpose_matrix(errors_for_each_run);
 
     let mean_errors_for_each_season = season_errors
         .iter()
-        .map(|errors| mean(errors).unwrap_or_else(|| {1000.0}))
+        .map(|errors| mean(errors).unwrap_or(1000.0))
         .collect::<Vec<f64>>();
     mean_errors_for_each_season
 }
-
-
 
 fn changed_elos(elo_table: &EloTable, elo_table_after_season: &EloTable) -> u32 {
     let mut changed_elos: u32 = 0;

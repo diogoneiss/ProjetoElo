@@ -23,11 +23,7 @@ pub fn transpose_matrix<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
         .collect()
 }
 
-
-
 pub fn calculate_rmse(elo_diffs: &HashMap<String, f64>, season_match_count: Option<u32>) -> f64 {
-    
-
     let n = match season_match_count {
         Some(n) => n,
         None => elo_diffs.len() as u32,
@@ -36,13 +32,13 @@ pub fn calculate_rmse(elo_diffs: &HashMap<String, f64>, season_match_count: Opti
     let mut sum = 0.0;
     let mut sum_squared = 0.0;
 
-    for (_, diff) in elo_diffs {
+    for diff in elo_diffs.values() {
         sum += diff;
     }
 
     let mean = sum / n as f64;
 
-    for (_, diff) in elo_diffs {
+    for diff in elo_diffs.values() {
         let diff_squared = (diff - mean).powi(2);
         if diff_squared.is_infinite() || diff_squared.is_nan() {
             return f64::MAX;
@@ -57,7 +53,7 @@ pub fn calculate_rmse(elo_diffs: &HashMap<String, f64>, season_match_count: Opti
 
     if std.is_nan() || std < 0.2 {
         return 10000.0;
-    } 
+    }
 
     let log_std = std.log(2.0);
 
@@ -69,7 +65,7 @@ pub fn calculate_rmse(elo_diffs: &HashMap<String, f64>, season_match_count: Opti
     //println!("mse: {}, std: {}, log_std: {}", mse, std, log_std);
 
     if std < 1.0 {
-        return mse.sqrt()/log_std;
+        return mse.sqrt() / log_std;
     }
     mse.sqrt()
 }

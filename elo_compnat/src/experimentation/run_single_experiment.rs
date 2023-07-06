@@ -1,15 +1,13 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::{elo::{
-    train::{
-        construct_elo_table_for_year,
-        EloTable,
-    },
-}, util::math::calculate_rmse};
+use crate::{
+    elo::train::{construct_elo_table_for_year, EloTable},
+    util::math::calculate_rmse,
+};
 
 use crate::{experimentation::simulate_season::simulate_season, util::game::Game};
 
-use super::{run_config::{self, RunConfig}};
+use super::run_config::{self, RunConfig};
 
 /// Given an starting elo and matches, simulates the season and compares it to the real season and the real match results, returning the elo difference table
 pub fn run_season_experiment(
@@ -30,8 +28,12 @@ pub fn run_season_experiment(
     let elo_config = config_after_run.clone();
 
     //TODO: retornar as novas partidas nessa função para usar no python, mas nao vai ser pra usar aqui
-    let real_elo =
-        construct_elo_table_for_year(season_games, Some(starting_elo.clone()), Some(&elo_config), experiment_config);
+    let real_elo = construct_elo_table_for_year(
+        season_games,
+        Some(starting_elo.clone()),
+        Some(&elo_config),
+        experiment_config,
+    );
 
     //let tabela_fake = LeagueTable::new(&simulated_matches, "Brasileirão", &1);
     //let tabela = LeagueTable::new(season_games, "Brasileirão", &1);
@@ -51,7 +53,7 @@ pub fn run_season_experiment(
         }
     */
     //let games_count = changed_elos(starting_elo, &elo_simulated);
-    let games_count = count_unique_teams(&season_games);
+    let games_count = count_unique_teams(season_games);
     let rmse_correct_mean = calculate_rmse(&elo_diff, Some(games_count));
 
     //println!("RMSE with games: {}", rmse_correct_mean);
@@ -67,7 +69,10 @@ fn compare_elo_tables(real_elo: &EloTable, simulated_elo: &EloTable) -> HashMap<
         let simulated_elo = simulated_elo.get(team);
         let diff = match simulated_elo {
             Some(sim_elo) => elo.rating - sim_elo.rating,
-            None => {println!("A zero appeared! team: {:?}", &team ); 0.0},
+            None => {
+                println!("A zero appeared! team: {:?}", &team);
+                0.0
+            }
         };
         elo_diff.insert(team.clone(), diff);
     }
