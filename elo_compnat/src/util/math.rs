@@ -66,5 +66,10 @@ pub fn calculate_rmse(elo_diffs: &HashMap<String, f64>, season_match_count: Opti
     }
     let mse = sum_squared / n as f64;
     // regularize the error using the log of the standard deviation
+    //println!("mse: {}, std: {}, log_std: {}", mse, std, log_std);
+
+    if std < 1.0 {
+        return mse.sqrt()/log_std;
+    }
     mse.sqrt()
 }

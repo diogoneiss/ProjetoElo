@@ -8,6 +8,7 @@ import pyswarms.backend.topology as topologies
 import time
 from pyswarms.utils.plotters import (plot_cost_history, plot_contour, plot_surface)
 from pyswarms.utils.plotters.formatters import Mesher
+from pyswarms.utils.search import RandomSearch
 CORES = 10
 
 
@@ -231,9 +232,26 @@ def main():
     my_topology = topologies.Ring(static=True)
     dimensions = len(gene_space_dict)
     n_particles = 10
+
+    options = {'c1': [0.3, 2],
+               'c2': [0.3, 2],
+               'w' : [0.5, 2],
+               'k' : [11, 15],
+               'p' : 1}
+    
+    g = RandomSearch(ps.single.GlobalBestPSO, n_particles=40, dimensions=dimensions,
+                   options=options, objective_func=swarm_fitness_function, iters=20,n_selection_iters=40 )
+    
+    best_score, best_options = g.search()
+    print("Bounds: ", g.bounds)
+    print("Best score:", best_score)
+    print("Best options: ", best_options)
+
     # Call instance of GlobalBestPSO
     optimizer = ps.single.GlobalBestPSO(n_particles=10, dimensions=dimensions,
                                               options=options)
+    
+
     
     cost, pos = optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=20)
 
@@ -241,6 +259,7 @@ def main():
     print("Best position: ", pos)
 
     plot_cost_history(cost_history=optimizer.cost_history)
+    plt.title("Cost history")
     plt.show()
 
     # TODO: implement grid search pyswarms.utils.search.random_search module
