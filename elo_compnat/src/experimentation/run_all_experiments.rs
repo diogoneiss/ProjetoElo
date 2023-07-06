@@ -46,7 +46,7 @@ pub fn run_experiments(
     let end_t = *seasons_map.keys().max().unwrap();
 
     let mut errors_for_each_run: Vec<Vec<f64>> = Vec::new();
-    let mut draw_frequency: Vec<Vec<f64>> = Vec::new();
+    //let mut draw_frequency: Vec<Vec<f64>> = Vec::new();
 
     for i in 0..experiment_config.random_variations {
         // we set the seed for the random number generator at the simulation function, with i as its seed
@@ -55,7 +55,7 @@ pub fn run_experiments(
         let mut last_season_config = elo_config.clone();
 
         let mut elo_table = elo_table_at_start.clone();
-        let mut tie_frequency = vec![];
+        //let mut tie_frequency = vec![];
 
         for s_year in start_t..=end_t {
             //TODO: perform n random variations, with unique seeds
@@ -71,14 +71,14 @@ pub fn run_experiments(
             );
 
             last_season_config = season_config;
-            tie_frequency.push(last_season_config.tie_frequency);
+            //tie_frequency.push(last_season_config.tie_frequency);
 
             elo_table = real_elo;
 
             errors_per_season.push(rmse);
         }
         errors_for_each_run.push(errors_per_season);
-        draw_frequency.push(tie_frequency);
+        //draw_frequency.push(tie_frequency);
 
     }
 

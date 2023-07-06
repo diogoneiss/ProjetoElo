@@ -9,7 +9,7 @@ import time
 from pyswarms.utils.plotters import (plot_cost_history, plot_contour, plot_surface)
 from pyswarms.utils.plotters.formatters import Mesher
 from pyswarms.utils.search import RandomSearch
-CORES = 10
+CORES = 1
 
 
 
@@ -55,6 +55,45 @@ pub struct RunConfig {
 def inserir_frequencia(x, valor=0.28, posicao=5):
     return x[:posicao].tolist() + [valor] + x[posicao:].tolist()
 
+
+def run_swarm(options_list):
+    low_values = [value['low'] for value in gene_space_dict.values()]
+    high_values = [value['high'] for value in gene_space_dict.values()]
+
+    # Convert the lists to numpy arrays
+    max_bound = np.array(low_values)
+    min_bound = np.array(high_values)
+    bounds = (min_bound, max_bound)
+    dimensions = len(gene_space_dict)
+
+    options = {'c1': 0.5, 'c2': 0.3, 'w':0.9}
+
+    # create a dict with the options from the x values
+    for i, x in enumerate(options_list):
+        for j, key in enumerate(options.keys()):
+            if i == j:
+                options[key] = x
+
+
+    optimizer = ps.single.GlobalBestPSO(n_particles=10, dimensions=dimensions,
+                                              options=options, bounds=bounds )
+    
+    cost, pos = optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=20)
+
+    return cost, pos
+
+
+def meta_swarm_fitness_function(x_list):
+    
+    cost_list = []
+    for x in x_list:
+        print("Running swarm with options: ", x)
+        
+        # Perform optimization
+        cost, pos = run_swarm(x)
+        cost_list.append(cost)
+
+    return cost_list
 
 def swarm_fitness_function(x_list_of_lists):
     aggregated_fitness = np.zeros(len(x_list_of_lists))
@@ -229,15 +268,34 @@ def main():
 
     # hyperparameters for PSO
     options = {'c1': 0.5, 'c2': 0.2, 'w': 0.9}
-    my_topology = topologies.Ring(static=True)
-    dimensions = len(gene_space_dict)
-    n_particles = 10
 
+    #doesnt work properly
+    my_topology = topologies.Ring(static=True)
+
+    def meta_optimize():
+
+        max_bound = np.array([1.0, 1.0, 0.99])
+        min_bound = np.array([0.1, 0.1, 0.1])
+        bounds_meta = (min_bound, max_bound)
+
+        # Call instance of GlobalBestPSO for our meta experiment
+        meta_optimizer = ps.single.GlobalBestPSO(n_particles=10, dimensions=len(max_bound),
+                                                    options=options, bounds=bounds )
+            
+
+            
+        cost, pos = meta_optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=20)
+        print("Best cost: ", cost)
+        print("Best parameters for c1 c2 and w: ", pos)
+
+
+    """
     options = {'c1': [0.3, 2],
                'c2': [0.3, 2],
                'w' : [0.5, 2],
                'k' : [11, 15],
                'p' : 1}
+    
     
     g = RandomSearch(ps.single.GlobalBestPSO, n_particles=40, dimensions=dimensions,
                    options=options, objective_func=swarm_fitness_function, iters=20,n_selection_iters=40 )
@@ -246,21 +304,26 @@ def main():
     print("Bounds: ", g.bounds)
     print("Best score:", best_score)
     print("Best options: ", best_options)
+    """
+    def optimize_elo():
+        dimensions = len(gene_space_dict)
+        n_particles = 10
+        # Call instance of GlobalBestPSO
+        optimizer = ps.single.GlobalBestPSO(n_particles=10, dimensions=dimensions,
+                                                options=options, bounds=bounds )
+        
 
-    # Call instance of GlobalBestPSO
-    optimizer = ps.single.GlobalBestPSO(n_particles=10, dimensions=dimensions,
-                                              options=options)
-    
+        
+        cost, pos = optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=5)
 
-    
-    cost, pos = optimizer.optimize(swarm_fitness_function,  n_processes=CORES, iters=20)
+        print("Best cost: ", cost)
+        print("Best position: ", pos)
 
-    print("Best cost: ", cost)
-    print("Best position: ", pos)
+        plot_cost_history(cost_history=optimizer.cost_history)
+        plt.title("Cost history")
+        plt.show()
 
-    plot_cost_history(cost_history=optimizer.cost_history)
-    plt.title("Cost history")
-    plt.show()
+    optimize_elo()
 
     # TODO: implement grid search pyswarms.utils.search.random_search module
 

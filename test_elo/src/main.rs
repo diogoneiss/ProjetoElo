@@ -12,8 +12,8 @@ fn main() {
         home_field_advantage_weight: 1.2,
         market_value_weight: 1.2,
         tie_frequency: 0.30,
-        w_division: vec![1.2, 1.05],
+        w_division: vec![20.0, 10.0],
 
     };
-    elo_compnat::run(param, Some(&test_config));
+    elo_compnat::run(param, Some(&test_config)).unwrap();
 }
