@@ -16,14 +16,14 @@ use crate::experimentation::run_config::{RunConfig, RunHyperparameters};
 
 #[pyfunction]
 pub fn run(parameters: RunHyperparameters, config: Option<&RunConfig>) -> PyResult<()> {
-    println!("\n\nRunning experiments with parameters: {:?}", &parameters);
+    //println!("\n\nRunning experiments with parameters: {:?}", &parameters);
     //print current directory
     let curr_directory: String = match std::env::current_dir() {
         Ok(path) => path.display().to_string(),
         Err(e) => panic!("Error getting current directory: {}", e),
     };
 
-    println!("Current directory: {}", &curr_directory);
+    //println!("Current directory: {}", &curr_directory);
 
     let mut path = String::from("data/brasileirao.csv");
 
@@ -33,8 +33,15 @@ pub fn run(parameters: RunHyperparameters, config: Option<&RunConfig>) -> PyResu
         let path2 = String::from("elo_compnat/");
         path = path2 + &path;
     }
+    else if curr_directory.ends_with("python") {
+        println!("Current directory ends with python");
+        panic!("You are running from the python directory. Please run from the lib directory of the project");
+        //let path2 = String::from("../");
+        //path = path2 + &path;
+        //println!("Modified path: {}", &path);
+    }
 
-    println!("Path to csv: {}", &path);
+    //println!("Path to csv: {}", &path);
 
     let partidas = util::parsing::load_csv(&path)
         .map_err(|e| {
@@ -47,7 +54,7 @@ pub fn run(parameters: RunHyperparameters, config: Option<&RunConfig>) -> PyResu
         None => run_config::RunConfig::default(),
     };
 
-    let errors = run_experiments(&partidas, &run_config, &parameters);
+    let errors = run_experiments(&partidas, &run_config, &parameters, true);
 
     parameters.print_errors_by_year(&errors);
 
@@ -63,7 +70,7 @@ pub fn get_data(filename: &str) -> Vec<Game> {
         Err(e) => panic!("Error getting current directory: {}", e),
     };
 
-    println!("Current directory: {}", &curr_directory);
+    //println!("Current directory: {}", &curr_directory);
 
 
     let mut path = String::from("data/brasileirao.csv");
@@ -73,12 +80,19 @@ pub fn get_data(filename: &str) -> Vec<Game> {
     // mas se é chamado de dentro de test_elo, precisa do prefixo, pq ele usa a pasta data errada
     // Ideal seria resolver dentro do da função de leitura de maneira invisível, deixei um TODO lá
     if curr_directory.ends_with("ProjetoElo") {
-        println!("Current directory ends with ProjetoElo");
+        
         let path2 = String::from("elo_compnat/");
         path = path2 + &path;
     }
+    else if curr_directory.ends_with("python") {
+       
+        //panic!("You are running from the python directory. Please run from the lib directory of the project");
+        let path2 = String::from("../");
+        path = path2 + &path;
+        
+    }
 
-    println!("Path to csv: {}", &path);
+    //println!("final Path to csv: {}", &path);
 
     let partidas = util::parsing::load_csv(&path)
         .map_err(|e| {
@@ -94,7 +108,6 @@ pub fn get_data(filename: &str) -> Vec<Game> {
 /// data parsed
 ///
 pub fn fitness_function(
-    py: Python,
     filename: &str,
     run_config_py: Vec<f64>,
     hyperparameters_py: Vec<u16>,
@@ -107,7 +120,7 @@ pub fn fitness_function(
     //println!("Genotypes for this run: {:?}", &run_config);
     //println!("1a partida: {:?}", partidas[0]);
 
-    let errors = run_experiments(&partidas, &run_config, &hyperparameters);
+    let errors = run_experiments(&partidas, &run_config, &hyperparameters, false);
 
     //println!("Errors: {:?}", &errors);
     // aqui sairia o erro

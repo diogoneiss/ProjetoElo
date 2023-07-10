@@ -1,4 +1,4 @@
-use crate::util::game::{Game, GameResult};
+use crate::{util::game::{Game, GameResult}, experimentation::run_config::CustomRating};
 use std::collections::HashMap;
 
 use skillratings::elo::EloRating;
@@ -132,7 +132,7 @@ impl<'a> LeagueTable<'a> {
         }
     }
 
-    pub fn print_final_table_with_elo(&self, elo_ratings: &HashMap<String, EloRating>) {
+    pub fn print_final_table_with_elo(&self, elo_ratings: &HashMap<String, CustomRating>) {
         let ranked_teams = self.rank();
 
         println!(
@@ -158,7 +158,7 @@ impl<'a> LeagueTable<'a> {
             let elo_rating = elo_ratings
                 .get(*team_name)
                 .cloned()
-                .unwrap_or(EloRating::new());
+                .unwrap_or(CustomRating::new());
 
             let elo_value = elo_rating.rating;
             println!(

@@ -4,7 +4,7 @@ use crate::{elo::{
         EloTable,
         print_elo_table
     },
-    util::{season},
+    util::{season, league::LeagueTable},
 }, util::math::{mean, transpose_matrix}};
 
 use crate::{util::game::Game};
@@ -17,6 +17,7 @@ pub fn run_experiments(
     all_games: &[Game],
     run_config: &RunConfig,
     experiment_config: &RunHyperparameters,
+    display: bool,
 ) -> Vec<f64> {
 
     // Setup: Configure the required structs
@@ -46,16 +47,16 @@ pub fn run_experiments(
     let end_t = *seasons_map.keys().max().unwrap();
 
     let mut errors_for_each_run: Vec<Vec<f64>> = Vec::new();
-    let mut draw_frequency: Vec<Vec<f64>> = Vec::new();
-
+    //let mut draw_frequency: Vec<Vec<f64>> = Vec::new();
+    let mut elo_table = elo_table_at_start.clone();
     for i in 0..experiment_config.random_variations {
         // we set the seed for the random number generator at the simulation function, with i as its seed
         
         let mut errors_per_season: Vec<f64> = Vec::new();
         let mut last_season_config = elo_config.clone();
 
-        let mut elo_table = elo_table_at_start.clone();
-        let mut tie_frequency = vec![];
+        elo_table = elo_table_at_start.clone();
+        //let mut tie_frequency = vec![];
 
         for s_year in start_t..=end_t {
             //TODO: perform n random variations, with unique seeds
@@ -71,17 +72,27 @@ pub fn run_experiments(
             );
 
             last_season_config = season_config;
-            tie_frequency.push(last_season_config.tie_frequency);
+            //tie_frequency.push(last_season_config.tie_frequency);
 
             elo_table = real_elo;
 
             errors_per_season.push(rmse);
         }
         errors_for_each_run.push(errors_per_season);
-        draw_frequency.push(tie_frequency);
+        //draw_frequency.push(tie_frequency);
 
     }
 
+    if display {
+        println!("Elo table at end:");
+        print_elo_table(&elo_table, true);
+
+        let last_season = seasons_map.get(&end_t).unwrap();
+        let tabela = LeagueTable::new(&last_season.matches, last_season.league.as_str(), &1);
+
+        println!("Final elos with standings:");
+        tabela.print_final_table_with_elo(&elo_table);
+    }
 
     let season_errors = transpose_matrix(errors_for_each_run);
 
